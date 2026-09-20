@@ -371,8 +371,22 @@ function createWorld(scene) {
     createInteractable(scene, 'diya2', 'diya', 150, 550, 0x555555, 'cylinder');
     createInteractable(scene, 'diya3', 'diya', 0, 450, 0x555555, 'cylinder');
     
-    let b3 = createInteractable(scene, 'blessing_devotion', 'blessing', 0, 600, 0x00ff00, 'octahedron');
+    let b3 = createInteractable(scene, 'blessing_devotion', 'blessing', 0, 560, 0x00ff00, 'octahedron');
     b3.mesh.visible = false; b3.visible = false;
+
+    // --- CORRUPTION TRAPS (INCREASE DIFFICULTY BEFORE BOULDERS) ---
+    // North traps
+    createInteractable(scene, 'trap_n1', 'corruption_trap', -50, -300, 0xff0000, 'box');
+    createInteractable(scene, 'trap_n2', 'corruption_trap', 80, -450, 0xff0000, 'box');
+    createInteractable(scene, 'trap_n3', 'corruption_trap', -100, -500, 0xff0000, 'box');
+    // East traps
+    createInteractable(scene, 'trap_e1', 'corruption_trap', 300, 50, 0xff0000, 'box');
+    createInteractable(scene, 'trap_e2', 'corruption_trap', 450, -100, 0xff0000, 'box');
+    createInteractable(scene, 'trap_e3', 'corruption_trap', 550, 150, 0xff0000, 'box');
+    // South traps
+    createInteractable(scene, 'trap_s1', 'corruption_trap', -80, 350, 0xff0000, 'box');
+    createInteractable(scene, 'trap_s2', 'corruption_trap', 120, 450, 0xff0000, 'box');
+    createInteractable(scene, 'trap_s3', 'corruption_trap', 0, 520, 0xff0000, 'box');
 
     // ==========================================
     // WEST: MOUNTAIN (COURAGE) (-400, 0)

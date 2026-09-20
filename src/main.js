@@ -82,7 +82,7 @@ function loadModel(name, path) {
             
             // 4. Normalize the scale (Ganesha = ~12 units tall)
             const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = name === 'ganesha' ? 120 : 5; 
+            const targetSize = name === 'ganesha' ? 60 : 5; 
             const scale = maxDim > 0 ? targetSize / maxDim : 1;
             wrapper.scale.set(scale, scale, scale);
             
@@ -250,19 +250,24 @@ function startCinematic() {
     
     // Create Guide Arrow (Literal Arrow Shape)
     arrowContainer = new THREE.Group();
-    const arrowMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+    // Huge glowing yellow arrow
+    const arrowMat = new THREE.MeshStandardMaterial({
+        color: 0xffff00, 
+        emissive: 0xaa8800, 
+        roughness: 0.2
+    });
     
     // The shaft (rectangular box)
-    const shaftGeo = new THREE.BoxGeometry(1.5, 1.5, 6);
+    const shaftGeo = new THREE.BoxGeometry(4, 4, 15);
     const shaft = new THREE.Mesh(shaftGeo, arrowMat);
-    shaft.position.z = -3; // Move shaft back
+    shaft.position.z = -7; 
     
     // The head (triangle/cone)
-    const headGeo = new THREE.ConeGeometry(3, 4, 4);
+    const headGeo = new THREE.ConeGeometry(8, 12, 4);
     const head = new THREE.Mesh(headGeo, arrowMat);
     head.rotation.x = Math.PI / 2; // Point forward along Z axis
     head.rotation.y = Math.PI / 4; // Make it look like a flat triangle
-    head.position.z = 2; // Move head forward
+    head.position.z = 4; 
     
     arrowContainer.add(shaft, head);
     scene.add(arrowContainer);
@@ -453,7 +458,27 @@ function checkInteraction() {
     for (let obj of interactables) {
         if (!obj.visible) continue;
         let dist = Math.sqrt(Math.pow(pX - obj.x, 2) + Math.pow(pZ - obj.z, 2));
-        if (dist < 25) { handleObjInteraction(obj); break; }
+        
+        // Increase radius for blessings so they are easy to collect
+        let interactRadius = (obj.type === 'blessing') ? 60 : 25;
+        
+        if (dist < interactRadius) { 
+            // If it's a blessing, interact immediately and stop
+            if (obj.type === 'blessing') {
+                handleObjInteraction(obj);
+                return;
+            }
+        }
+    }
+    
+    // If no blessing found, check regular objects
+    for (let obj of interactables) {
+        if (!obj.visible || obj.type === 'blessing') continue;
+        let dist = Math.sqrt(Math.pow(pX - obj.x, 2) + Math.pow(pZ - obj.z, 2));
+        if (dist < 25) { 
+            handleObjInteraction(obj); 
+            break; 
+        }
     }
 }
 
@@ -790,10 +815,23 @@ function animate() {
         }
         
         let dx = 0; let dz = 0;
-        if (keys.w || keys.arrowup) dz -= 1;
-        if (keys.s || keys.arrowdown) dz += 1;
-        if (keys.a || keys.arrowleft) dx -= 1;
-        if (keys.d || keys.arrowright) dx += 1;
+        if (inRunnerMode) {
+            // Camera is looking West (-X direction).
+            // Pressing Up (W) moves West (-X).
+            // Pressing Down (S) moves East (+X).
+            // Pressing Left (A) moves South (+Z).
+            // Pressing Right (D) moves North (-Z).
+            if (keys.w || keys.arrowup) dx -= 1;
+            if (keys.s || keys.arrowdown) dx += 1;
+            if (keys.a || keys.arrowleft) dz += 1;
+            if (keys.d || keys.arrowright) dz -= 1;
+        } else {
+            // Default Top-Down Camera
+            if (keys.w || keys.arrowup) dz -= 1;
+            if (keys.s || keys.arrowdown) dz += 1;
+            if (keys.a || keys.arrowleft) dx -= 1;
+            if (keys.d || keys.arrowright) dx += 1;
+        }
         
         if (dx !== 0 || dz !== 0) {
             const len = Math.sqrt(dx*dx + dz*dz);
@@ -820,7 +858,8 @@ function animate() {
         // === GUIDING ARROW LOGIC ===
         if (arrowContainer) {
             arrowContainer.position.copy(player.position);
-            arrowContainer.position.y += 12 + Math.sin(Date.now() * 0.005) * 2; // Hover and bob
+            arrowContainer.position.y += 25 + Math.sin(Date.now() * 0.005) * 3; // Hover much higher above player
+
             
             let target = null;
             if (gameState.stage === 'START' || gameState.stage === 'TALK_TO_GANESHA') target = ganesha ? ganesha.position : {x:0, z:0};
@@ -887,7 +926,31 @@ function animate() {
         
         let canInteract = false;
         for (let obj of interactables) {
-            if (obj.visible && Math.sqrt(Math.pow(player.position.x - obj.x, 2) + Math.pow(player.position.z - obj.z, 2)) < 25) { canInteract = true; break; }
+            if (!obj.visible) continue;
+            let dist = Math.sqrt(Math.pow(player.position.x - obj.x, 2) + Math.pow(player.position.z - obj.z, 2));
+            
+            // Check traps (Difficulty increase)
+            if (obj.type === 'corruption_trap' && dist < 15) {
+                // Take damage and bounce back
+                gameState.health--;
+                updateHUD();
+                showToast("You touched corruption! Health remaining: " + gameState.health);
+                
+                // Bounce back
+                player.position.x += (player.position.x - obj.x) * 0.5;
+                player.position.z += (player.position.z - obj.z) * 0.5;
+                
+                if (gameState.health <= 0) {
+                    showGameOver();
+                }
+                break; // Stop checking
+            }
+            
+            // Check interactable prompt
+            let interactRadius = (obj.type === 'blessing') ? 60 : 25;
+            if (dist < interactRadius && obj.type !== 'corruption_trap') { 
+                canInteract = true; 
+            }
         }
         document.getElementById('interaction-prompt').style.display = canInteract ? 'block' : 'none';
         
@@ -928,9 +991,6 @@ async function initGame() {
     scene.add(player);
     
     ganesha = createGanesha();
-    if (localStorage.getItem('ganeshaScale')) {
-        ganesha.scale.setScalar(parseFloat(localStorage.getItem('ganeshaScale')));
-    }
     // (If no localStorage, it keeps the auto-scaler scale from loadModel)
     scene.add(ganesha);
     ganesha.position.set(0, 7, -20);
