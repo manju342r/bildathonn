@@ -1,4 +1,75 @@
 
+let banasuraMesh = null;
+let banasuraTaunting = false;
+
+function createBanasura() {
+    if (modelCache['banasura']) {
+        banasuraMesh = modelCache['banasura'].clone();
+    } else {
+        banasuraMesh = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(10, 30, 10), new THREE.MeshBasicMaterial({color: 0x331111}));
+        body.position.y = 15;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(6), new THREE.MeshBasicMaterial({color: 0xaa2222}));
+        head.position.y = 35;
+        banasuraMesh.add(body, head);
+    }
+    banasuraMesh.visible = false;
+    scene.add(banasuraMesh);
+}
+
+function triggerBanasuraTaunt(blessingCount) {
+    if (!banasuraMesh) return;
+    banasuraTaunting = true;
+    banasuraMesh.visible = true;
+    if (blessingCount === 1) {
+        banasuraMesh.position.set(player.position.x, 30, player.position.z - 60);
+        banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
+        showToast("Banasura: 'One blessing. You think that will stop me? Keep searching, little one.'");
+    } else if (blessingCount === 2) {
+        banasuraMesh.position.set(player.position.x + 50, 40, player.position.z + 50);
+        banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
+        showToast("Banasura: 'Two... You are getting closer. But every step brings you closer to destruction.'");
+    } else if (blessingCount === 3) {
+        banasuraMesh.position.set(player.position.x - 50, 20, player.position.z);
+        banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
+        showToast("Banasura: 'Three blessings... The final path belongs to me. Come to the Mountain!'");
+    } else if (blessingCount === 4) {
+        banasuraMesh.position.set(-1250, 55, 0);
+        banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
+        showToast("Banasura: 'You have gathered the blessings. Do you truly believe they can restore what I have destroyed?'");
+    }
+    createSmokePuff(banasuraMesh.position);
+    if (blessingCount < 4) {
+        setTimeout(() => {
+            if (banasuraMesh) banasuraMesh.visible = false;
+            createSmokePuff(banasuraMesh.position);
+            banasuraTaunting = false;
+        }, 12000);
+    } else {
+        banasuraTaunting = false;
+    }
+}
+
+function createSmokePuff(pos) {
+    for(let i=0; i<15; i++) {
+        let p = new THREE.Mesh(new THREE.SphereGeometry(3+Math.random()*3), new THREE.MeshBasicMaterial({color: 0x111111, transparent: true, opacity: 0.8}));
+        p.position.copy(pos);
+        p.position.y += Math.random() * 20;
+        p.position.x += (Math.random()-0.5)*15;
+        p.position.z += (Math.random()-0.5)*15;
+        scene.add(p);
+        let shrink = setInterval(() => {
+            p.position.y += 0.5;
+            p.scale.multiplyScalar(0.95);
+            p.material.opacity -= 0.05;
+            if (p.material.opacity <= 0) {
+                scene.remove(p);
+                clearInterval(shrink);
+            }
+        }, 50);
+    }
+}
+
 function setObjective(text) { 
     const elDesc = document.getElementById('quest-desc'); 
     const elTitle = document.getElementById('quest-title');
