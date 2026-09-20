@@ -459,19 +459,25 @@ function checkInteraction() {
 
 function handleGaneshaInteraction() {
     if (gameState.stage === 'TALK_TO_GANESHA') {
-        showToast("Ganapati: Mooshak, the Ananta Jyoti is shattered!");
-        setTimeout(() => showToast("Vighna has scattered the 4 blessings."), 3000);
+        showToast("Ganapati: Mooshak, my faithful vahana...");
+        setTimeout(() => showToast("Ganapati: Vighna has returned and shattered the Ananta Jyoti!"), 3000);
+        setTimeout(() => showToast("Ganapati: The four sacred blessings have been scattered across the land."), 6000);
         setTimeout(() => {
-            showToast("Find them. Start by heading NORTH to the Ancient Grove.");
+            showToast("Ganapati: You are small, Mooshak, but wisdom matters more than size.\nHead NORTH to the Ancient Grove first.");
             gameState.stage = 'NORTH_WISDOM';
             setObjective("Find the three Stone Symbols in the North.");
-        }, 6000);
+        }, 9000);
     } else if (gameState.stage === 'RETURN_CENTER') {
-        startFinalVighnaEvent();
+        showToast("Ganapati: You have done well, Mooshak.");
+        setTimeout(() => {
+            showToast("Ganapati: But Vighna is not finished — it has corrupted the very shrine!\nBreak through it!");
+            startFinalVighnaEvent();
+        }, 3000);
     } else {
-        showToast("Ganapati: Restore the Ananta Jyoti, my friend.");
+        showToast("Ganapati: I am Vighnaharta — the Remover of Obstacles. But today, you must be the one to remove them.");
     }
 }
+
 
 
 function handleObjInteraction(obj) {
@@ -1008,15 +1014,24 @@ function playEndingCinematic() {
     showToast("THE ANANTA JYOTI IS RESTORED!");
     
     setTimeout(() => {
-        showToast("The blessings were never meant to make the journey easy...");
+        showToast("Like Ganesha, who turned wisdom into victory over Kartikeya...");
     }, 4000);
     
     setTimeout(() => {
-        showToast("They were meant to guide the journey.");
+        showToast("You did not race the world. You understood it.");
     }, 8000);
+
+    setTimeout(() => {
+        showToast("The blessings were never meant to make the journey easy.");
+    }, 12000);
     
     setTimeout(() => {
-        showToast("HAPPY GANESH CHATURTHI!");
+        showToast("They were meant to guide the journey.");
+    }, 16000);
+
+    setTimeout(() => {
+        showToast("HAPPY GANESH CHATURTHI!\nGanpati Bappa Morya!");
         document.getElementById('hud-objective').innerHTML = "<b>THE FESTIVAL IS COMPLETE</b>";
-    }, 12000);
+    }, 20000);
 }
+
