@@ -363,6 +363,7 @@ const uiComplete = document.getElementById('game-complete');
 const notifyEl = document.getElementById('notification');
 
 let cinematicTimeout = null;
+let dioramaGroup = null;
 
 function startCinematic() {
     uiMainMenu.classList.remove('active');
@@ -374,66 +375,86 @@ function startCinematic() {
     
     // Create Guide Arrow (Literal Arrow Shape)
     arrowContainer = new THREE.Group();
-    // Huge glowing yellow arrow
+    // Huge glowing cyan diamond
     const arrowMat = new THREE.MeshToonMaterial({
-        color: 0xffff00, 
-        emissive: 0xaa8800, 
+        color: 0x00ffff, 
+        emissive: 0x00aaaa, 
         roughness: 0.2
     });
     
-    // The shaft (rectangular box)
-    const shaftGeo = new THREE.BoxGeometry(4, 4, 15);
-    const shaft = new THREE.Mesh(shaftGeo, arrowMat);
-    shaft.position.z = -7; 
-    
-    // The head (triangle/cone)
-    const headGeo = new THREE.ConeGeometry(8, 12, 4);
-    const head = new THREE.Mesh(headGeo, arrowMat);
-    head.rotation.x = Math.PI / 2; // Point forward along Z axis
-    head.rotation.y = Math.PI / 4; // Make it look like a flat triangle
-    head.position.z = 4; 
-    
-    arrowContainer.add(shaft, head);
+    const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), arrowMat);
+    diamond.scale.set(1, 1.5, 1);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(5, 0.5, 8, 16), arrowMat);
+    ring.rotation.x = Math.PI / 2;
+    arrowContainer.add(diamond, ring);
     scene.add(arrowContainer);
     
-    // Barriers removed per user request (Open World freedom)
-
     if (typeof ganesha !== 'undefined') ganesha.position.set(0, 7, -20);
     
     isCinematic = true;
     isPlaying = false; // Lock controls
     
-    // Start camera high up looking at the center
-    camera.position.set(0, 100, 150);
-    camera.lookAt(0, 0, 0);
+    // Build Diorama at Z=2000 for the opening shot
+    if (!dioramaGroup) {
+        dioramaGroup = new THREE.Group();
+        dioramaGroup.position.set(0, 0, 2000);
+        const dFloor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshBasicMaterial({color: 0x88cc88}));
+        dFloor.rotation.x = -Math.PI/2;
+        dioramaGroup.add(dFloor);
+        for(let i=0; i<15; i++) {
+            let h = 10 + Math.random()*30;
+            let b = new THREE.Mesh(new THREE.BoxGeometry(10, h, 10), new THREE.MeshBasicMaterial({color: 0xdddddd}));
+            b.position.set((Math.random()-0.5)*150, h/2, (Math.random()-0.5)*150);
+            dioramaGroup.add(b);
+        }
+        scene.add(dioramaGroup);
+    }
+    
+    // Initial Camera
+    camera.position.set(0, 50, 2150);
+    camera.lookAt(0, 0, 2000);
     
     nextCinematicText();
 }
 
 function nextCinematicText() {
-    if (cinematicIndex < STORY_TEXTS.intro.length) {
-        cinematicText.innerText = STORY_TEXTS.intro[cinematicIndex];
-        
-        // 3D Camera & Effects synced with text index
-        if (cinematicIndex === 2) {
-            // Camera zooms in slightly
-            camera.position.set(40, 40, 60);
-            camera.lookAt(0, 0, -20);
+    if (cinematicIndex === 0) {
+        cinematicText.innerText = "The cities had fallen one by one...";
+        camera.position.set(50, 60, 2150);
+        camera.lookAt(0, 0, 2000);
+    } else if (cinematicIndex === 1) {
+        cinematicText.innerText = "The destroyer had arrived.";
+        // Corrupt diorama
+        dioramaGroup.children.forEach(c => {
+            if (c.geometry.type === 'BoxGeometry') c.material.color.setHex(0x330000);
+        });
+        if (banasuraMesh) {
+            banasuraMesh.visible = true;
+            banasuraMesh.position.set(0, 20, 2050);
+            banasuraMesh.lookAt(0,0,2000);
         }
-        else if (cinematicIndex === 4) {
-            // BOOM - Vighna hits
-            // Sky handled dynamically
-            let shakes = 0;
-            let shaker = setInterval(() => {
-                camera.position.x += (Math.random() - 0.5) * 5;
-                camera.position.y += (Math.random() - 0.5) * 5;
-                shakes++;
-                if (shakes > 15) clearInterval(shaker);
-            }, 50);
+    } else if (cinematicIndex === 2) {
+        cinematicText.innerText = "The final sacred temple still stood.";
+        if (banasuraMesh) banasuraMesh.visible = false;
+        if (dioramaGroup) {
+            dioramaGroup.visible = false;
         }
-        
-        cinematicIndex++;
-        cinematicTimeout = setTimeout(nextCinematicText, 4000);
+        // Jump to Shrine
+        camera.position.set(0, 150, 250);
+        camera.lookAt(0, 20, 0);
+    } else if (cinematicIndex === 3) {
+        cinematicText.innerText = "Banasura approaches the Sacred Shrine...";
+        camera.position.set(100, 80, 100);
+        camera.lookAt(0, 20, 0);
+    } else if (cinematicIndex === 4) {
+        cinematicText.innerText = "Mooshak must recover the Four Lost Blessings!";
+        camera.position.set(40, 40, 60);
+        camera.lookAt(0, 0, -20);
+    }
+
+    cinematicIndex++;
+    if (cinematicIndex <= 5) {
+        cinematicTimeout = setTimeout(nextCinematicText, 4500);
     } else {
         endCinematic();
     }
