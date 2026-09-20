@@ -7,13 +7,14 @@ const GAME_CONFIG = {
 
 const STORY_TEXTS = {
     intro: [
-        "Long ago, on the sacred mountain of Kailash, lived Goddess Parvati and Lord Shiva.",
-        "One day, Parvati created a child from her own sacred energy and breathed life into him.\nShe named him Ganesha.",
-        "She gave him one command:\n\"Guard the entrance. Let no one enter without my permission.\"",
-        "When Shiva returned, Ganesha stopped him — faithfully following his mother's order.",
-        "BOOM!\nA fierce confrontation broke out. In the battle, Ganesha fell.",
-        "Heartbroken and furious, Parvati demanded Ganesha be restored.\nShiva placed the head of an elephant upon him and brought him back to life.",
-        "From that day, Ganesha became Ganapati — Lord of the Ganas.\nAnd Vighnaharta — the Remover of Obstacles.\nNow, Vighna has returned. The Ananta Jyoti is shattered.\nMooshak, you must save the festival!"
+        "The sacred temple has fallen into darkness.",
+        "Banasura, a terrifying demon lord of darkness, has invaded the sanctuary.",
+        "He has shattered the Ananta Jyoti, the Eternal Flame, and cast a dark barrier trapping Lord Ganesha.",
+        "Without Vighnaharta's presence, the world plunges into chaos. Obstacles block every path.",
+        "You are Mooshak, the faithful vehicle. You must venture into the four corners of this corrupted temple.",
+        "Recover the Lost Blessings of Wisdom, Prosperity, Devotion, and Courage.",
+        "Use them to break Banasura's dark hold, restore the Eternal Flame, and free Ganapati!",
+        "Beware the traps and corruptions Banasura has laid in your path..."
     ],
     end: [
         "Like Ganesha, who turned wisdom into victory over Kartikeya...",

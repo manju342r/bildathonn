@@ -624,6 +624,9 @@ function handleObjInteraction(obj) {
         gameState.blessings++;
         updateHUD();
         
+        // Taunt from Banasura!
+        triggerBanasuraTaunt(gameState.blessings);
+        
         if (obj.id === 'blessing_wisdom') {
             showToast("BLESSING OF WISDOM OBTAINED\nThe path to the East is open!");
             gameState.stage = 'EAST_PROSPERITY';
@@ -1102,6 +1105,65 @@ function startFinalVighnaEvent() {
     createInteractable(scene, 'vighna3', 'corruption', 30, -30, 0xff0000, 'box');
     createInteractable(scene, 'vighna4', 'corruption', -30, -30, 0xff0000, 'box');
     questData.corruptionsCleared = 0;
+}
+
+function triggerBanasuraTaunt(blessingCount) {
+    isPaused = true;
+    uiHud.classList.remove('active');
+    
+    const taunts = [
+        "YOU CLAIM ONE BLESSING, BUT MY DARKNESS IS ETERNAL!",
+        "FOOL! THE MORE YOU GATHER, THE CLOSER YOU COME TO YOUR DOOM!",
+        "GANESHA CANNOT SAVE YOU NOW. SURRENDER TO BANASURA!",
+        "NO! THE FINAL BLESSING... I WILL CRUSH YOU MYSELF!"
+    ];
+    
+    // Environment changes
+    if (scene && scene.background) scene.background.setHex(0x330000); // Deep red
+    if (scene && scene.fog) {
+        scene.fog.color.setHex(0x330000);
+        scene.fog.density = 0.004; // Thicker fog
+    }
+    
+    // Screen shake
+    document.getElementById('game-container').classList.add('shake');
+    
+    // Show cinematic
+    const cinematic = document.getElementById('cinematic-screen');
+    const textEl = document.getElementById('cinematic-text');
+    cinematic.classList.add('active');
+    cinematic.style.background = "rgba(100, 0, 0, 0.7)"; 
+    
+    textEl.innerText = "BANASURA: \"" + taunts[Math.min(blessingCount - 1, 3)] + "\"";
+    textEl.style.color = "#ff3333";
+    textEl.style.fontSize = "40px";
+    
+    const skipBtn = document.getElementById('btn-skip-cinematic');
+    skipBtn.innerText = "BRACE YOURSELF";
+    
+    // Temporarily overwrite the skip behavior for this taunt
+    const oldOnClick = skipBtn.onclick;
+    skipBtn.onclick = () => {
+        cinematic.classList.remove('active');
+        cinematic.style.background = "rgba(0,0,0,0.3)";
+        textEl.style.color = "#fff";
+        textEl.style.fontSize = "";
+        skipBtn.innerText = "SKIP";
+        
+        // Restore environment
+        if (scene && scene.background) scene.background.setHex(0x0a0a1a);
+        if (scene && scene.fog) {
+            scene.fog.color.setHex(0x0a0a1a);
+            scene.fog.density = 0.0015;
+        }
+        document.getElementById('game-container').classList.remove('shake');
+        
+        uiHud.classList.add('active');
+        isPaused = false;
+        
+        // Restore old behavior for cinematic skip
+        skipBtn.onclick = oldOnClick;
+    };
 }
 
 function playEndingCinematic() {
