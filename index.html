@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Lost Blessings - 3D Adventure</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+    <!-- 3D Canvas Container -->
+    <div id="game-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer">
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <h1>LOADING ASSETS...</h1>
+            <p id="loading-text">Preparing the 3D world...</p>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen">
+            <h1>THE LOST BLESSINGS</h1>
+            <p>3D Story-Driven Adventure</p>
+            <button id="btn-play">START STORY</button>
+            <button id="btn-how">HOW TO PLAY</button>
+        </div>
+
+        <!-- How To Play -->
+        <div id="how-to-play" class="screen">
+            <h2>HOW TO PLAY</h2>
+            <p><b>MOVE:</b> W, A, S, D or Arrow Keys</p>
+            <p><b>INTERACT:</b> E Key</p>
+            <p>Explore the 3D temple, interact with puzzles, and restore the Ananta Jyoti!</p>
+            <button id="btn-close-how">CLOSE</button>
+        </div>
+        
+        <!-- Cinematic Screen -->
+        <div id="cinematic-screen" class="screen" style="background: rgba(0,0,0,0.3); pointer-events: auto;">
+            <h2 id="cinematic-text" style="text-shadow: 2px 2px 8px #000; text-align: center; margin-top: 60vh;"></h2>
+            <button id="btn-skip-cinematic" style="position: absolute; bottom: 50px; right: 50px; font-size: 20px;">SKIP</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="screen">
+            <canvas id="minimap" width="200" height="200"></canvas>
+            
+            <div id="hud-stats">
+                Health: <span id="val-health">3</span> | Keys: <span id="val-keys">0</span><br>
+                Blessings: <span id="val-blessings">0</span>/4
+            </div>
+            
+            <div id="quest-container">
+                <div id="quest-title">OBJECTIVE</div>
+                <div id="quest-desc">Explore the Temple</div>
+            </div>
+
+            <div id="interaction-prompt">Press 'E' to Interact</div>
+            <div id="notification"></div>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div id="quiz-modal" class="screen">
+            <h2>KNOWLEDGE SHRINE</h2>
+            <div id="quiz-story"></div>
+            <div id="quiz-question-container" style="display:none;">
+                <h3 id="quiz-q">Question</h3>
+                <button class="btn-opt" id="opt-0">Option A</button>
+                <button class="btn-opt" id="opt-1">Option B</button>
+                <button class="btn-opt" id="opt-2">Option C</button>
+                <button class="btn-opt" id="opt-3">Option D</button>
+                <br><br>
+                <button id="btn-leave-mid-quiz" style="background:#888;">LEAVE FOR NOW</button>
+            </div>
+            <div id="quiz-result" style="display:none;">
+                <h3 id="quiz-score"></h3>
+                <button id="btn-quiz-continue">CONTINUE</button>
+            </div>
+            <div id="quiz-start-buttons">
+                <button id="btn-start-quiz">START QUIZ</button>
+                <button id="btn-cancel-quiz">LEAVE</button>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over" class="screen">
+            <h1>GAME OVER</h1>
+            <p>The darkness grows...</p>
+            <button id="btn-revive" style="display:none;">USE KNOWLEDGE KEY TO REVIVE</button>
+            <button id="btn-restart">RESTART FROM CHECKPOINT</button>
+        </div>
+
+        <!-- Game Complete -->
+        <div id="game-complete" class="screen">
+            <h1>HAPPY GANESH CHATURTHI!</h1>
+            <p>The Ananta Jyoti is restored. The festival is complete.</p>
+            <p>Thank you for playing!</p>
+            <button id="btn-play-again">PLAY AGAIN</button>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="src/data.js"></script>
+    <script src="src/characters.js"></script>
+    <script src="src/world.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>
