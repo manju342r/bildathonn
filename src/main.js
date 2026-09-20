@@ -128,7 +128,6 @@ let currentZone = "HUB";
 
 let isPlaying = false;
 let cameraMode = 0; // 0: Classic, 1: Action, 2: Top-Down
-let cameraMode = 0; // 0: Classic, 1: Action, 2: Top-Down
 let isCinematic = false;
 let isPaused = false;
 let inRunnerMode = false;
