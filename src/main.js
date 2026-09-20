@@ -20,31 +20,46 @@ function createBanasura() {
 function triggerBanasuraTaunt(blessingCount) {
     if (!banasuraMesh) return;
     
-    // Mini-cutscene lock!
+    // Mini-cutscene lock
     isPlaying = false; 
     isCinematic = true;
-    
     banasuraTaunting = true;
     banasuraMesh.visible = true;
     
-    let dialogue = "";
+    let dialogues = [];
     
     if (blessingCount === 1) {
         banasuraMesh.position.set(player.position.x, 30, player.position.z - 60);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        dialogue = "One blessing. You think that will stop me? Keep searching, little one.";
+        dialogues = [
+            "Banasura: One blessing. You think that will stop me?",
+            "Mooshak: The light of devotion cannot be extinguished by your darkness!",
+            "Banasura: Brave words for a tiny creature. Keep searching, little one."
+        ];
     } else if (blessingCount === 2) {
         banasuraMesh.position.set(player.position.x + 50, 40, player.position.z + 50);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        dialogue = "Two... You are getting closer. But every step brings you closer to destruction.";
+        dialogues = [
+            "Banasura: Two... You are getting closer. But every step brings you closer to destruction.",
+            "Mooshak: Ganapati's blessings belong to the world, not to you!",
+            "Banasura: The world belongs to the strong. And you are weak."
+        ];
     } else if (blessingCount === 3) {
         banasuraMesh.position.set(player.position.x - 50, 20, player.position.z);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        dialogue = "Three blessings... The final path belongs to me. Come to the Mountain!";
+        dialogues = [
+            "Banasura: Three blessings... You have come further than I expected.",
+            "Mooshak: Wisdom illuminates even the darkest paths. Your reign is ending.",
+            "Banasura: We shall see... The final path belongs to me. Come to the Mountain!"
+        ];
     } else if (blessingCount === 4) {
         banasuraMesh.position.set(-1250, 55, 0);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        dialogue = "You have gathered the blessings. Do you truly believe they can restore what I have destroyed?";
+        dialogues = [
+            "Banasura: You have gathered the blessings. Do you truly believe they can restore what I have destroyed?",
+            "Mooshak: With the Sacred Diya, the Ananta Jyoti will awaken!",
+            "Banasura: Then come and take it... if you dare."
+        ];
     }
     
     // Force camera to look at Banasura
@@ -52,11 +67,9 @@ function triggerBanasuraTaunt(blessingCount) {
     camera.lookAt(banasuraMesh.position.x, banasuraMesh.position.y, banasuraMesh.position.z);
     
     uiCinematic.classList.add('active');
-    cinematicText.innerText = dialogue;
-    
     createSmokePuff(banasuraMesh.position);
     
-    // Handle skipping gracefully so it doesn't break quest state
+    let dIndex = 0;
     let tauntTimeout = null;
     const skipBtn = document.getElementById('btn-skip-cinematic');
     const oldOnClick = skipBtn.onclick;
@@ -68,14 +81,28 @@ function triggerBanasuraTaunt(blessingCount) {
         banasuraTaunting = false;
         
         uiCinematic.classList.remove('active');
+        cinematicText.style.color = "#ffffff";
         isCinematic = false;
         isPlaying = true;
         
         skipBtn.onclick = oldOnClick; // Restore original skip button behavior
     };
     
+    const advanceDialogue = () => {
+        if (dIndex < dialogues.length) {
+            cinematicText.innerText = dialogues[dIndex];
+            if (dialogues[dIndex].startsWith("Banasura")) cinematicText.style.color = "#ff4444";
+            else cinematicText.style.color = "#44aaff";
+            
+            dIndex++;
+            tauntTimeout = setTimeout(advanceDialogue, 4000);
+        } else {
+            endTaunt();
+        }
+    };
+    
     skipBtn.onclick = endTaunt;
-    tauntTimeout = setTimeout(endTaunt, 9000);
+    advanceDialogue();
 }
 
 function createSmokePuff(pos) {
