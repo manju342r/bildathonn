@@ -1133,34 +1133,55 @@ function animate() {
         }
         
         let dx = 0; let dz = 0;
-        if (inRunnerMode) {
-            // Camera is looking West (-X direction).
-            // Pressing Up (W) moves West (-X).
-            // Pressing Down (S) moves East (+X).
-            // Pressing Left (A) moves South (+Z).
-            // Pressing Right (D) moves North (-Z).
-            if (keys.w || keys.arrowup) dx -= 1;
-            if (keys.s || keys.arrowdown) dx += 1;
-            if (keys.a || keys.arrowleft) dz += 1;
-            if (keys.d || keys.arrowright) dz -= 1;
-        } else {
-            // Default Top-Down Camera
-            if (keys.w || keys.arrowup) dz -= 1;
-            if (keys.s || keys.arrowdown) dz += 1;
-            if (keys.a || keys.arrowleft) dx -= 1;
-            if (keys.d || keys.arrowright) dx += 1;
-        }
         
-        if (dx !== 0 || dz !== 0) {
-            const len = Math.sqrt(dx*dx + dz*dz);
-            dx /= len; dz /= len;
-            let speed = inRunnerMode ? GAME_CONFIG.runnerSpeed * delta : GAME_CONFIG.playerSpeed * delta;
+        if (cameraMode === 1 && !inRunnerMode) {
+            // Action Camera: Tank Controls (Camera-Relative)
+            let moveSpeed = 0;
+            if (keys.w || keys.arrowup) moveSpeed = 1; // Forward relative to Mooshak
+            if (keys.s || keys.arrowdown) moveSpeed = -1; // Backward
             
-            const newX = player.position.x + dx * speed;
-            const newZ = player.position.z + dz * speed;
-            if (!checkCollision(newX, player.position.z, 6)) player.position.x = newX;
-            if (!checkCollision(player.position.x, newZ, 6)) player.position.z = newZ;
-            player.rotation.y = Math.atan2(dx, dz);
+            let turnSpeed = 0;
+            if (keys.a || keys.arrowleft) turnSpeed = 1; // Turn Left
+            if (keys.d || keys.arrowright) turnSpeed = -1; // Turn Right
+            
+            player.rotation.y += turnSpeed * 4.0 * delta; // Turn character
+            
+            if (moveSpeed !== 0) {
+                let speed = GAME_CONFIG.playerSpeed * delta;
+                let moveX = Math.sin(player.rotation.y) * moveSpeed;
+                let moveZ = Math.cos(player.rotation.y) * moveSpeed;
+                
+                const newX = player.position.x + moveX * speed;
+                const newZ = player.position.z + moveZ * speed;
+                if (!checkCollision(newX, player.position.z, 6)) player.position.x = newX;
+                if (!checkCollision(player.position.x, newZ, 6)) player.position.z = newZ;
+            }
+        } else {
+            if (inRunnerMode) {
+                // Camera is looking West (-X direction).
+                if (keys.w || keys.arrowup) dx -= 1;
+                if (keys.s || keys.arrowdown) dx += 1;
+                if (keys.a || keys.arrowleft) dz += 1;
+                if (keys.d || keys.arrowright) dz -= 1;
+            } else {
+                // Default Isometric / Top-Down Camera
+                if (keys.w || keys.arrowup) dz -= 1;
+                if (keys.s || keys.arrowdown) dz += 1;
+                if (keys.a || keys.arrowleft) dx -= 1;
+                if (keys.d || keys.arrowright) dx += 1;
+            }
+            
+            if (dx !== 0 || dz !== 0) {
+                const len = Math.sqrt(dx*dx + dz*dz);
+                dx /= len; dz /= len;
+                let speed = inRunnerMode ? GAME_CONFIG.runnerSpeed * delta : GAME_CONFIG.playerSpeed * delta;
+                
+                const newX = player.position.x + dx * speed;
+                const newZ = player.position.z + dz * speed;
+                if (!checkCollision(newX, player.position.z, 6)) player.position.x = newX;
+                if (!checkCollision(player.position.x, newZ, 6)) player.position.z = newZ;
+                player.rotation.y = Math.atan2(dx, dz);
+            }
         }
         
         // Dynamic Ground Y Calculation (Stairs & Parkour)
