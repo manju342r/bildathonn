@@ -502,22 +502,22 @@ function checkInteraction() {
 
 function handleGaneshaInteraction() {
     if (gameState.stage === 'TALK_TO_GANESHA') {
-        showToast("Ganapati: Mooshak, my faithful vahana...");
-        setTimeout(() => showToast("Ganapati: Vighna has returned and shattered the Ananta Jyoti!"), 3000);
-        setTimeout(() => showToast("Ganapati: The four sacred blessings have been scattered across the land."), 6000);
+        showToast("The central statue stands silent and lifeless.");
+        setTimeout(() => showToast("A divine echo fills your mind: 'Mooshak, my faithful vahana...'"), 3000);
+        setTimeout(() => showToast("Echo: 'Banasura has banished me. Gather the blessings to summon me back!'"), 6000);
         setTimeout(() => {
-            showToast("Ganapati: You are small, Mooshak, but wisdom matters more than size.\nHead NORTH to the Ancient Grove first.");
+            showToast("Echo: 'You are small, but courage matters. Head NORTH to the Ancient Grove first.'");
             gameState.stage = 'NORTH_WISDOM';
             setObjective("Find the three Stone Symbols in the North.");
         }, 9000);
     } else if (gameState.stage === 'RETURN_CENTER') {
-        showToast("Ganapati: You have done well, Mooshak.");
+        showToast("The four blessings resonate, emitting a blinding light from the statue!");
         setTimeout(() => {
-            showToast("Ganapati: But Vighna is not finished — it has corrupted the very shrine!\nBreak through it!");
+            showToast("Banasura: 'FOOL! I WILL NOT LET YOU SUMMON HIM!'");
             startFinalVighnaEvent();
         }, 3000);
     } else {
-        showToast("Ganapati: I am Vighnaharta — the Remover of Obstacles. But today, you must be the one to remove them.");
+        showToast("The statue remains cold. You must find all blessings to summon Vinayaka.");
     }
 }
 
@@ -1095,8 +1095,8 @@ function playOpeningCinematic() {
 
 function startFinalVighnaEvent() {
     gameState.stage = 'FINAL_VIGHNA';
-    setObjective("Break through the final Vighna corruption!");
-    showToast("VIGHNA RETURNS!");
+    setObjective("Break Banasura's barrier to summon Vinayaka!");
+    showToast("BANASURA SURROUNDS THE STATUE WITH DARKNESS!");
     // Sky handled dynamically
     
     // Spawn 4 corrupted points around the center
@@ -1175,22 +1175,22 @@ function playEndingCinematic() {
     
     gameState.stage = "GAME_COMPLETE"; // Triggers brilliant dawn
     
-    showToast("THE ANANTA JYOTI IS RESTORED!");
+    showToast("THE FINAL CORRUPTION IS CLEARED!");
     
     setTimeout(() => {
-        showToast("Like Ganesha, who turned wisdom into victory over Kartikeya...");
+        showToast("VINAYAKA IS SUMMONED! The statue bursts with blinding divine light.");
     }, 4000);
     
     setTimeout(() => {
-        showToast("You did not race the world. You understood it.");
+        showToast("Banasura: 'NO! IMPOSSIBLE!'");
     }, 8000);
 
     setTimeout(() => {
-        showToast("The blessings were never meant to make the journey easy.");
+        showToast("With a single strike of his tusk, Vinayaka shatters Banasura into dust.");
     }, 12000);
     
     setTimeout(() => {
-        showToast("They were meant to guide the journey.");
+        showToast("Ganapati: 'Well done, Mooshak. The darkness is banished.'");
     }, 16000);
 
     setTimeout(() => {
