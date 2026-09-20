@@ -947,11 +947,12 @@ function animate() {
     }
     // ----------------------------------------
 
-    if (!isPlaying && cinematicIndex > 0) {
+    // Only spin the camera if we are on the main menu (not playing, not in a cinematic)
+    if (!isPlaying && !isCinematic) {
         camera.position.x = Math.sin(Date.now() * 0.0002) * 150;
         camera.position.z = Math.cos(Date.now() * 0.0002) * 150;
         camera.position.y = 100;
-        camera.lookAt(0, 0, 0);
+        camera.lookAt(0, 20, 0);
     }
     
     if (isPlaying && !isPaused) {
