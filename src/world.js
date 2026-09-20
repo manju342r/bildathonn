@@ -595,8 +595,7 @@ function createWorld(scene) {
     b4.mesh.visible = false; b4.visible = false;
     
     // Banasura Placeholder / The antagonist standing at the top causing the rock slide
-    let banasuraBase = addWall(scene, -1250, 0, 40, 40, 0x221111, 20);
-    banasuraBase.position.y = 55; // Placeholder base for Banasura's actual model
+    addWall(scene, -1250, 0, 40, 40, 0x221111, 130);
     
     // The Sacred Diya - the final required object
     let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1200, 0, 0xffd700, 'cylinder');
