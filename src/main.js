@@ -529,7 +529,11 @@ function nextCinematicText() {
     if (cinematicIndex <= 5) {
         cinematicTimeout = setTimeout(nextCinematicText, 5500);
     } else {
-        function endCinematic() {
+        endCinematic();
+    }
+}
+
+function endCinematic() {
     if (cinematicTimeout) clearTimeout(cinematicTimeout);
     uiCinematic.classList.remove('active');
     uiHud.classList.add('active');
