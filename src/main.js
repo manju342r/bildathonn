@@ -395,6 +395,8 @@ let dioramaGroup = null;
 let meteorMesh = null;
 let introCameraShake = 0;
 
+let shockwave = null;
+
 function startCinematic() {
     uiMainMenu.classList.remove('active');
     uiCinematic.classList.add('active');
@@ -420,41 +422,49 @@ function startCinematic() {
     isPlaying = false; // Lock controls
     
     // Build Diorama at Z=2000
-    if (!dioramaGroup) {
-        dioramaGroup = new THREE.Group();
-        dioramaGroup.position.set(0, 0, 2000);
-        
-        // Base platform
-        const dFloor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({color: 0x445544}));
-        dFloor.rotation.x = -Math.PI/2;
-        dioramaGroup.add(dFloor);
-        
-        // City buildings (better aesthetics)
-        const buildingMat = new THREE.MeshToonMaterial({color: 0xe0e0e0});
-        for(let i=0; i<25; i++) {
-            let h = 15 + Math.random()*40;
-            let w = 10 + Math.random()*15;
-            let b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), buildingMat);
-            b.position.set((Math.random()-0.5)*200, h/2, (Math.random()-0.5)*200);
-            
-            // Randomly rotate some buildings
-            b.rotation.y = (Math.random() > 0.5) ? Math.PI/4 : 0;
-            dioramaGroup.add(b);
-        }
-        
-        scene.add(dioramaGroup);
-    } else {
-        dioramaGroup.visible = true;
-        // Reset colors
-        dioramaGroup.children.forEach(c => {
-            if (c.geometry.type === 'BoxGeometry') c.material.color.setHex(0xe0e0e0);
-        });
+    if (dioramaGroup) {
+        scene.remove(dioramaGroup);
     }
+    
+    dioramaGroup = new THREE.Group();
+    dioramaGroup.position.set(0, 0, 2000);
+    dioramaGroup.userData = { destroyed: false };
+    
+    // Base platform
+    const dFloor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshToonMaterial({color: 0x2d4c2d}));
+    dFloor.rotation.x = -Math.PI/2;
+    dioramaGroup.add(dFloor);
+    
+    // City buildings - Attractive Sacred City Design
+    for(let i=0; i<35; i++) {
+        let x = (Math.random()-0.5)*250;
+        let z = (Math.random()-0.5)*250;
+        let h = 20 + Math.random()*50;
+        let w = 12 + Math.random()*15;
+        
+        // Base Building
+        const bMat = new THREE.MeshToonMaterial({color: 0xffffff, emissive: 0x111111});
+        let b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), bMat);
+        b.position.set(x, h/2, z);
+        b.rotation.y = (Math.random() > 0.5) ? Math.PI/4 : 0;
+        b.userData = { crumbleDelay: Math.random() * 1.5 };
+        dioramaGroup.add(b);
+        
+        // Golden Roof (Cone)
+        const rMat = new THREE.MeshToonMaterial({color: 0xffcc00, emissive: 0x332200});
+        let r = new THREE.Mesh(new THREE.ConeGeometry(w*0.8, 15, 4), rMat);
+        r.position.set(x, h + 7.5, z);
+        r.rotation.y = b.rotation.y + Math.PI/4;
+        r.userData = { crumbleDelay: b.userData.crumbleDelay };
+        dioramaGroup.add(r);
+    }
+    
+    scene.add(dioramaGroup);
 
     if (!meteorMesh) {
         meteorMesh = new THREE.Mesh(
-            new THREE.IcosahedronGeometry(12, 1),
-            new THREE.MeshBasicMaterial({color: 0xffaa00})
+            new THREE.IcosahedronGeometry(15, 2),
+            new THREE.MeshBasicMaterial({color: 0xff5500, wireframe: false})
         );
         scene.add(meteorMesh);
     }
@@ -479,7 +489,8 @@ function nextCinematicText() {
         cinematicText.innerText = "The destroyer had arrived.";
         
         // Trigger Asteroid Fall
-        meteorMesh.position.set(20, 400, 1950);
+        meteorMesh.position.set(20, 500, 1950);
+        meteorMesh.scale.set(1,1,1);
         meteorMesh.visible = true;
         
         if (banasuraMesh) {
@@ -497,6 +508,7 @@ function nextCinematicText() {
         if (banasuraMesh) banasuraMesh.visible = false;
         if (dioramaGroup) dioramaGroup.visible = false;
         if (meteorMesh) meteorMesh.visible = false;
+        if (shockwave) shockwave.visible = false;
         
         // Jump to Shrine
         camera.position.set(0, 120, 200);
@@ -515,13 +527,9 @@ function nextCinematicText() {
 
     cinematicIndex++;
     if (cinematicIndex <= 5) {
-        cinematicTimeout = setTimeout(nextCinematicText, 5000);
+        cinematicTimeout = setTimeout(nextCinematicText, 5500);
     } else {
-        endCinematic();
-    }
-}
-
-function endCinematic() {
+        function endCinematic() {
     if (cinematicTimeout) clearTimeout(cinematicTimeout);
     uiCinematic.classList.remove('active');
     uiHud.classList.add('active');
@@ -1406,31 +1414,72 @@ function animate() {
         updateMinimap();
     }
 
-    // Intro Cinematic Asteroid Animation
-    if (isCinematic && cinematicIndex === 2 && typeof meteorMesh !== 'undefined' && meteorMesh && meteorMesh.visible) {
-        meteorMesh.position.y -= 250 * delta; // Faster fall
-        meteorMesh.rotation.x += 10 * delta;
+    // Intro Cinematic Asteroid Animation & City Crumble
+    if (isCinematic && cinematicIndex === 2) {
         
-        // Impact!
-        if (meteorMesh.position.y <= 10) {
-            meteorMesh.visible = false;
-            introCameraShake = 20; // Start shaking
+        // Meteor Fall
+        if (typeof meteorMesh !== 'undefined' && meteorMesh && meteorMesh.visible) {
+            meteorMesh.position.y -= 400 * delta; 
+            meteorMesh.rotation.x += 15 * delta;
+            meteorMesh.rotation.y += 10 * delta;
             
-            // Turn city corrupted red and ground dark
-            if (typeof dioramaGroup !== 'undefined' && dioramaGroup) {
-                dioramaGroup.children.forEach(c => {
-                    if (c.geometry && c.geometry.type === 'BoxGeometry') c.material.color.setHex(0x550000);
-                    if (c.geometry && c.geometry.type === 'PlaneGeometry') c.material.color.setHex(0x221111);
-                });
+            // Impact!
+            if (meteorMesh.position.y <= 10) {
+                meteorMesh.visible = false;
+                introCameraShake = 40; // Massive shake
+                
+                // Spawn Shockwave
+                if (typeof shockwave === 'undefined' || !shockwave) {
+                    shockwave = new THREE.Mesh(new THREE.TorusGeometry(5, 2, 8, 32), new THREE.MeshBasicMaterial({color: 0xff3300, transparent: true, opacity: 1}));
+                    shockwave.rotation.x = Math.PI / 2;
+                    scene.add(shockwave);
+                }
+                shockwave.position.set(20, 10, 1950);
+                shockwave.scale.set(1, 1, 1);
+                shockwave.material.opacity = 1;
+                shockwave.visible = true;
+                
+                if (typeof dioramaGroup !== 'undefined' && dioramaGroup) {
+                    dioramaGroup.userData.destroyed = true;
+                }
+                createSmokePuff(new THREE.Vector3(20, 10, 1950), 30);
             }
-            createSmokePuff(new THREE.Vector3(20, 10, 1950), 20); // Big explosion
+        }
+        
+        // Shockwave Expand
+        if (typeof shockwave !== 'undefined' && shockwave && shockwave.visible) {
+            shockwave.scale.addScalar(400 * delta);
+            shockwave.material.opacity -= 1.5 * delta;
+            if (shockwave.material.opacity <= 0) shockwave.visible = false;
+        }
+        
+        // City Crumble Animation
+        if (typeof dioramaGroup !== 'undefined' && dioramaGroup && dioramaGroup.userData.destroyed) {
+            dioramaGroup.children.forEach(c => {
+                if (c.geometry && c.geometry.type === 'PlaneGeometry') {
+                    // Darken ground
+                    c.material.color.lerp(new THREE.Color(0x1a0505), 5 * delta);
+                } else {
+                    // Darken buildings, lose emissive glow
+                    c.material.color.lerp(new THREE.Color(0x3a0000), 5 * delta);
+                    if (c.material.emissive) c.material.emissive.lerp(new THREE.Color(0x000000), 5 * delta);
+                    
+                    // Crumble delay cascade
+                    c.userData.crumbleDelay -= delta;
+                    if (c.userData.crumbleDelay <= 0) {
+                        c.rotation.x += (Math.random() - 0.5) * 5 * delta;
+                        c.rotation.z += (Math.random() - 0.5) * 5 * delta;
+                        c.position.y -= 30 * delta; // Sink into ground
+                    }
+                }
+            });
         }
     }
     
     // Apply Camera Shake
     if (typeof introCameraShake !== 'undefined' && introCameraShake > 0) {
-        camera.position.x += (Math.random() - 0.5) * 5;
-        camera.position.y += (Math.random() - 0.5) * 5;
+        camera.position.x += (Math.random() - 0.5) * 6;
+        camera.position.y += (Math.random() - 0.5) * 6;
         introCameraShake -= delta * 15;
     }
 
