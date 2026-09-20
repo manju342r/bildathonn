@@ -347,19 +347,26 @@ function createWorld(scene) {
     }
     
     // City Puzzle (Prosperity) - PARKOUR CHALLENGE
-    addPlatform(scene, 250, 20, 0, 40, 40);
-    addPlatform(scene, 320, 40, 0, 30, 30);
-    addPlatform(scene, 320, 60, -70, 30, 30);
-    addPlatform(scene, 390, 80, -70, 30, 30);
-    addPlatform(scene, 460, 100, -70, 20, 20); // Small tricky jump
-    addPlatform(scene, 460, 120, 0, 20, 20);
-    addPlatform(scene, 550, 140, 0, 40, 40); // Final Platform
+    addPlatform(scene, 250, 15, 0, 40, 40);
+    addPlatform(scene, 320, 25, 0, 30, 30);
+    addPlatform(scene, 320, 35, -70, 30, 30);
+    addPlatform(scene, 390, 45, -70, 30, 30);
+    addPlatform(scene, 460, 55, -70, 25, 25);
+    addPlatform(scene, 460, 65, 0, 25, 25);
+    addPlatform(scene, 550, 75, 0, 40, 40); // Final Platform
+    
+    // 5 Collectible offerings on the platforms
+    createInteractable(scene, 'offering0', 'offering', 320, 0, 0xffffff, 'sphere', 28);
+    createInteractable(scene, 'offering1', 'offering', 320, -70, 0xffffff, 'sphere', 38);
+    createInteractable(scene, 'offering2', 'offering', 390, -70, 0xffffff, 'sphere', 48);
+    createInteractable(scene, 'offering3', 'offering', 460, -70, 0xffffff, 'sphere', 58);
+    createInteractable(scene, 'offering4', 'offering', 460, 0, 0xffffff, 'sphere', 68);
     
     // Traps on platforms
-    createInteractable(scene, 'trap_p1', 'corruption_trap', 320, 0, 0xff0000, 'box', 40);
-    createInteractable(scene, 'trap_p2', 'corruption_trap', 390, -70, 0xff0000, 'box', 80);
+    createInteractable(scene, 'trap_p1', 'corruption_trap', 320, 0, 0xff0000, 'box', 25);
+    createInteractable(scene, 'trap_p2', 'corruption_trap', 390, -70, 0xff0000, 'box', 45);
     
-    let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, 0, 0x00ff00, 'octahedron', 140);
+    let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, 0, 0x00ff00, 'octahedron', 85);
     b2.mesh.visible = false; b2.visible = false;
 
     // ==========================================

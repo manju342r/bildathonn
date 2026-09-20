@@ -566,6 +566,21 @@ function handleObjInteraction(obj) {
             let s3 = interactables.find(i => i.id === 'sym3'); if(s3) { s3.visible = true; s3.mesh.visible = true; }
         }
     }
+    else if (obj.type === 'offering') {
+        if (gameState.stage !== 'EAST_PROSPERITY') {
+            showToast("A festive offering. (Not needed yet)");
+            return;
+        }
+        obj.visible = false; obj.mesh.visible = false;
+        questData.offeringsFound = (questData.offeringsFound || 0) + 1;
+        showToast("Offering Collected! " + questData.offeringsFound + "/5");
+        if (questData.offeringsFound >= 5) {
+            showToast("All offerings collected! The Blessing of Prosperity appears at the top!");
+            let b2 = interactables.find(i => i.id === 'blessing_prosperity');
+            if (b2) { b2.visible = true; b2.mesh.visible = true; }
+            setObjective("Collect the Blessing of Prosperity at the top of the platforms.");
+        }
+    }
     else if (obj.type === 'mountain_shrine') {
         if (gameState.stage === 'WEST_COURAGE') {
             showToast("The Mountain Shrine opens! The Blessing of Courage is revealed!");
@@ -615,9 +630,7 @@ function handleObjInteraction(obj) {
         if (obj.id === 'blessing_wisdom') {
             showToast("BLESSING OF WISDOM OBTAINED\nThe path to the East is open!");
             gameState.stage = 'EAST_PROSPERITY';
-            setObjective("Climb the floating platforms in the East to find the blessing.");
-            let b2 = interactables.find(i => i.id === 'blessing_prosperity');
-            if (b2) { b2.visible = true; b2.mesh.visible = true; }
+            setObjective("Climb the platforms and collect all 5 offerings in the East.");
         }
         else if (obj.id === 'blessing_prosperity') {
             showToast("BLESSING OF PROSPERITY OBTAINED\nThe Southern winds clear the path!");
@@ -917,7 +930,7 @@ function animate() {
             player.position.y = groundY;
             window.playerVelocityY = 0;
             if (keys[' ']) {
-                window.playerVelocityY = 60; // Jump Force
+                window.playerVelocityY = 100; // Jump Force (Increased)
             }
         }
         
@@ -937,7 +950,14 @@ function animate() {
                 else target = {x: 0, z: -400};
             }
             else if (gameState.stage === 'EAST_PROSPERITY') {
-                target = interactables.find(obj => obj.id === 'blessing_prosperity') || {x: 550, z: 0};
+                if ((questData.offeringsFound || 0) < 5) {
+                    for (let i=0; i<5; i++) {
+                        let off = interactables.find(obj => obj.id === 'offering'+i);
+                        if (off && off.visible) { target = off; break; }
+                    }
+                } else {
+                    target = interactables.find(obj => obj.id === 'blessing_prosperity') || {x: 550, z: 0};
+                }
             }
             else if (gameState.stage === 'SOUTH_DEVOTION') {
                 if ((questData.diyasLit || 0) < 3) {
