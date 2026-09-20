@@ -297,8 +297,9 @@ function createWorld(scene) {
     shrineLight.position.set(0, 40, 0);
     scene.add(shrineLight);
 
-    // Knowledge Shrine (Moved slightly further out so it doesn't clip Ganapati)
-    createInteractable(scene, 'knowledge_shrine', 'shrine', 60, -60, 0x9932cc, 'box');
+    // Knowledge Shrine (Raised to sit on top of the middle platform tier)
+    const knowledgeShrineObj = createInteractable(scene, 'knowledge_shrine', 'shrine', 60, -60, 0x9932cc, 'box');
+    knowledgeShrineObj.mesh.position.y = 4;
 
 
     // ==========================================
