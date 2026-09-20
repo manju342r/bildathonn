@@ -268,7 +268,7 @@ function startCinematic() {
     // Create Guide Arrow (Literal Arrow Shape)
     arrowContainer = new THREE.Group();
     // Huge glowing yellow arrow
-    const arrowMat = new THREE.MeshStandardMaterial({
+    const arrowMat = new THREE.MeshToonMaterial({
         color: 0xffff00, 
         emissive: 0xaa8800, 
         roughness: 0.2
@@ -482,319 +482,15 @@ function checkInteraction() {
         
         if (dist < interactRadius) { 
             // If it's a blessing, interact immediately and stop
+            
             if (obj.type === 'blessing') {
-                handleObjInteraction(obj);
-                return;
-            }
-        }
-    }
-    
-    // If no blessing found, check regular objects
-    for (let obj of interactables) {
-        if (!obj.visible || obj.type === 'blessing') continue;
-        let dist = Math.sqrt(Math.pow(pX - obj.x, 2) + Math.pow(pZ - obj.z, 2));
-        if (dist < 25) { 
-            handleObjInteraction(obj); 
-            break; 
-        }
-    }
-}
-
-function handleGaneshaInteraction() {
-    if (gameState.stage === 'TALK_TO_GANESHA') {
-        showToast("The central statue stands silent and lifeless.");
-        setTimeout(() => showToast("A divine echo fills your mind: 'Mooshak, my faithful vahana...'"), 3000);
-        setTimeout(() => showToast("Echo: 'Banasura has banished me. Gather the blessings to summon me back!'"), 6000);
-        setTimeout(() => {
-            showToast("Echo: 'You are small, but devotion matters. Head NORTH to the Desert Ruins first.'");
-            gameState.stage = 'NORTH_DEVOTION';
-            setObjective("Find the Forgotten Shrine and 3 Unlit Diyas in the North.");
-        }, 9000);
-    } else if (gameState.stage === 'RETURN_CENTER') {
-        showToast("The four blessings resonate, emitting a blinding light from the statue!");
-        setTimeout(() => {
-            showToast("Banasura: 'FOOL! I WILL NOT LET YOU SUMMON HIM!'");
-            startFinalVighnaEvent();
-        }, 3000);
-    } else {
-        showToast("The statue remains cold. You must find all blessings to summon Vinayaka.");
-    }
-}
-
-
-
-function handleObjInteraction(obj) {
-    if (obj.type === 'shrine') {
-        isPaused = true;
-        uiHud.classList.remove('active');
-        uiQuiz.classList.add('active');
-        document.getElementById('quiz-story').innerText = QUIZ_DATA.intro;
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-start-buttons').style.display = 'block';
-        document.getElementById('quiz-question-container').style.display = 'none';
-    } 
-    else if (obj.type === 'symbol') {
-        if (gameState.stage !== 'SOUTH_WISDOM') {
-            showToast("The ancient symbols are dormant.");
-            return;
-        }
-        
-        // Sequence puzzle
-        if (!questData.symbolSequence) questData.symbolSequence = [];
-        
-        if (obj.id === 'sym1' && questData.symbolSequence.length === 0) {
-            questData.symbolSequence.push('sym1');
-            obj.visible = false; obj.mesh.visible = false;
-            showToast("Symbol 1 of 3 Activated.");
-        } else if (obj.id === 'sym2' && questData.symbolSequence.length === 1) {
-            questData.symbolSequence.push('sym2');
-            obj.visible = false; obj.mesh.visible = false;
-            showToast("Symbol 2 of 3 Activated.");
-        } else if (obj.id === 'sym3' && questData.symbolSequence.length === 2) {
-            questData.symbolSequence.push('sym3');
-            obj.visible = false; obj.mesh.visible = false;
-            showToast("The Ancient Gate hums with power... The Wisdom Blessing appears!");
-            let b1 = interactables.find(i => i.id === 'blessing_wisdom');
-            if (b1) { b1.mesh.visible = true; b1.visible = true; }
-            setObjective("Collect the Blessing of Wisdom.");
-        } else {
-            // Wrong sequence
-            showToast("Incorrect Sequence! The symbols reset.");
-            questData.symbolSequence = [];
-            let s1 = interactables.find(i => i.id === 'sym1'); if(s1) { s1.visible = true; s1.mesh.visible = true; }
-            let s2 = interactables.find(i => i.id === 'sym2'); if(s2) { s2.visible = true; s2.mesh.visible = true; }
-            let s3 = interactables.find(i => i.id === 'sym3'); if(s3) { s3.visible = true; s3.mesh.visible = true; }
-        }
-    }
-    else if (obj.type === 'offering') {
-        if (gameState.stage !== 'EAST_PROSPERITY') {
-            showToast("A festive offering. (Not needed yet)");
-            return;
-        }
-        obj.visible = false; obj.mesh.visible = false;
-        questData.offeringsFound = (questData.offeringsFound || 0) + 1;
-        showToast("Offering Collected! " + questData.offeringsFound + "/5");
-        if (questData.offeringsFound >= 5) {
-            showToast("All offerings collected! The Blessing of Prosperity appears at the top!");
-            let b2 = interactables.find(i => i.id === 'blessing_prosperity');
-            if (b2) { b2.visible = true; b2.mesh.visible = true; }
-            setObjective("Collect the Blessing of Prosperity at the top of the platforms.");
-        }
-    }
-    else if (obj.type === 'mountain_shrine') {
-        if (gameState.stage === 'WEST_COURAGE') {
-            showToast("The Mountain Shrine opens! The Blessing of Courage is revealed!");
-            let b4 = interactables.find(i => i.id === 'blessing_courage');
-            if (b4) { b4.visible = true; b4.mesh.visible = true; }
-        } else {
-            showToast("A shrine standing firm against the rock slides.");
-        }
-    }
-    else if (obj.type === 'diya') {
-        if (gameState.stage !== 'NORTH_DEVOTION') {
-            showToast("An unlit Diya. It feels cold.");
-            return;
-        }
-        obj.visible = false; obj.mesh.visible = false; // "Lit" visually later if we had material change
-        questData.diyasLit = (questData.diyasLit || 0) + 1;
-        showToast("Sacred Diya Lit! " + questData.diyasLit + "/3");
-        if (questData.diyasLit >= 3) {
-            showToast("The Desert Shrine illuminates. The Blessing appears!");
-            let b3 = interactables.find(i => i.id === 'blessing_devotion');
-            if (b3) { b3.mesh.visible = true; b3.visible = true; }
-            setObjective("Collect the Blessing of Devotion.");
-        }
-    }
-    else if (obj.type === 'hidden_shrine') {
-        if (gameState.stage === 'NORTH_DEVOTION' && !questData.diyasLit) {
-            setObjective("Light the 3 Sacred Diyas in the ruins.");
-            showToast("The Shrine is dormant. Light the 3 nearby Diyas.");
-        }
-    }
-    else if (obj.type === 'corruption') {
-        obj.visible = false; obj.mesh.visible = false;
-        questData.corruptionsCleared = (questData.corruptionsCleared || 0) + 1;
-        showToast("Corruption Cleared! " + questData.corruptionsCleared + "/4");
-        if (questData.corruptionsCleared >= 4) {
-            playEndingCinematic();
-        }
-    }
-    else if (obj.type === 'blessing') {
-        obj.visible = false; obj.mesh.visible = false;
-        gameState.blessings++;
-        updateHUD();
-        
-        // Taunt from Banasura!
-        triggerBanasuraTaunt(gameState.blessings);
-        
-        if (obj.id === 'blessing_devotion') {
-            showToast("BLESSING OF DEVOTION OBTAINED\nThe path to the East is open!");
-            gameState.stage = 'EAST_PROSPERITY';
-            setObjective("Climb the platforms and collect all 5 offerings in the East.");
-        }
-        else if (obj.id === 'blessing_prosperity') {
-            showToast("BLESSING OF PROSPERITY OBTAINED\nThe Southern winds clear the path!");
-            gameState.stage = 'SOUTH_WISDOM';
-            setObjective("Find the three Stone Symbols in the Southern Grove.");
-        }
-        else if (obj.id === 'blessing_wisdom') {
-            showToast("BLESSING OF WISDOM OBTAINED\nThe treacherous Western path reveals itself!");
-            gameState.stage = 'WEST_COURAGE';
-            setObjective("Navigate the Mountain canyon in the West.");
-        }
-        else if (obj.id === 'blessing_courage') {
-            showToast("BLESSING OF COURAGE OBTAINED\nALL FOUR BLESSINGS RECOVERED!");
-            gameState.stage = 'RETURN_CENTER';
-            setObjective("Return to Ganapati at the Central Shrine.");
-        }
-    }
-}
-
-let activeQuizQuestions = [];
-
-function startQuiz() {
-    document.getElementById('quiz-start-buttons').style.display = 'none';
-    document.getElementById('quiz-question-container').style.display = 'block';
-    
-    // Pick 3 random questions from the 20 available
-    let shuffled = QUIZ_DATA.questions.slice().sort(() => 0.5 - Math.random());
-    activeQuizQuestions = shuffled.slice(0, 3);
-    
-    currentQuestion = 0;
-    showQuestion();
-}
-
-function showQuestion() {
-    if (currentQuestion >= activeQuizQuestions.length) {
-        document.getElementById('quiz-question-container').style.display = 'none';
-        document.getElementById('quiz-result').style.display = 'block';
-        document.getElementById('quiz-score').innerText = "Knowledge Key & 2 Modaks Granted!";
-        gameState.keys++;
-        gameState.modaks += 2;
-        updateHUD();
-        document.getElementById('btn-quiz-continue').onclick = () => { uiQuiz.classList.remove('active'); uiHud.classList.add('active'); isPaused = false; };
-        return;
-    }
-    const q = activeQuizQuestions[currentQuestion];
-    document.getElementById('quiz-q').innerText = q.q;
-    for (let i = 0; i < 4; i++) {
-        const btn = document.getElementById('opt-' + i);
-        btn.innerText = q.options[i];
-        btn.onclick = () => {
-            if (i === q.correct) { 
-                currentQuestion++; 
-                showQuestion(); 
-            } 
-            else { 
-                // Wrong answer! End quiz and deduct health
-                gameState.health--;
-                updateHUD();
-                
-                uiQuiz.classList.remove('active'); 
-                uiHud.classList.add('active'); 
-                isPaused = false;
-                
-                showToast("Incorrect! The Shrine demands a toll. Lost 1 Health.");
-                
-                if (gameState.health <= 0) {
-                    showGameOver();
+                obj.mesh.rotation.y += delta;
+                obj.mesh.position.y = obj.y + Math.sin(Date.now() * 0.003) * 5; // Bobbing
+                if (obj.mesh.children[2]) {
+                    obj.mesh.children[2].scale.setScalar(1 + Math.sin(Date.now() * 0.005) * 0.1); // Aura pulse
                 }
-            }
-        };
-    }
-}
-
-// ==========================================
-// MINIMAP
-// ==========================================
-const minimapCanvas = document.getElementById('minimap');
-const mmCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
-
-function updateMinimap() {
-    if (!mmCtx) return;
-    mmCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-    const mapW = minimapCanvas.width;
-    const mapH = minimapCanvas.height;
-    mmCtx.save();
-    mmCtx.translate(mapW/2, mapH/2);
-    const scale = mapW / 1200; // Open world is huge, zoom out Minimap
-    mmCtx.scale(scale, scale);
-    mmCtx.translate(-player.position.x, -player.position.z);
-    
-    mmCtx.fillStyle = '#5c3a21';
-    for (let w of walls) {
-        if (!w.isActive) continue;
-        mmCtx.fillRect(w.minX, w.minZ, w.maxX - w.minX, w.maxZ - w.minZ);
-    }
-    for (let obj of interactables) {
-        if (!obj.visible) continue;
-        mmCtx.fillStyle = (obj.type === 'blessing') ? '#00ff00' : '#ffaa00';
-        mmCtx.beginPath(); mmCtx.arc(obj.x, obj.z, 20, 0, Math.PI*2); mmCtx.fill();
-    }
-    mmCtx.fillStyle = '#ffffff';
-    mmCtx.beginPath(); mmCtx.arc(player.position.x, player.position.z, 25, 0, Math.PI*2); mmCtx.fill();
-    
-    mmCtx.strokeStyle = '#00ff00'; mmCtx.lineWidth = 10;
-    mmCtx.beginPath(); mmCtx.moveTo(player.position.x, player.position.z);
-    mmCtx.lineTo(player.position.x + Math.sin(player.rotation.y)*60, player.position.z + Math.cos(player.rotation.y)*60);
-    mmCtx.stroke();
-    mmCtx.restore();
-}
-
-// ==========================================
-// GAME LOOP
-// ==========================================
-const clock = new THREE.Clock();
-function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-    
-    particles.rotation.y += 0.05 * delta;
-    
-    // --- Dynamic Time of Day / Sky System ---
-    let targetSkyColor = new THREE.Color(0x87CEEB); // Default Day
-    let targetSunIntensity = 1.0;
-    
-    if (gameState.stage === 'FINAL_VIGHNA' || (isCinematic && cinematicIndex > 4 && cinematicIndex < 10)) {
-        targetSkyColor.setHex(0x220000); // Vighna Red
-        targetSunIntensity = 0.2;
-    } else if (gameState.stage === 'NORTH_DEVOTION') {
-        targetSkyColor.setHex(0xff7744); // Sunset for the Desert/Diyas
-        targetSunIntensity = 0.8;
-    } else if (gameState.stage === 'WEST_COURAGE' || gameState.stage === 'RETURN_CENTER') {
-        targetSkyColor.setHex(0x0a0a2a); // Deep Night for the final challenge
-        targetSunIntensity = 0.1;
-    } else if (gameState.stage === 'GAME_COMPLETE' || (isCinematic && cinematicIndex > 20)) {
-        targetSkyColor.setHex(0xaaddff); // Brilliant Dawn
-        targetSunIntensity = 1.2;
-    }
-    
-    // Smoothly interpolate sky, fog, and sun
-    scene.background.lerp(targetSkyColor, 0.02);
-    scene.fog.color.lerp(targetSkyColor, 0.02);
-    if (typeof dirLight !== 'undefined') {
-        dirLight.intensity += (targetSunIntensity - dirLight.intensity) * 0.02;
-    }
-    // ----------------------------------------
-
-    if (!isPlaying && cinematicIndex > 0) {
-        camera.position.x = Math.sin(Date.now() * 0.0002) * 150;
-        camera.position.z = Math.cos(Date.now() * 0.0002) * 150;
-        camera.position.y = 100;
-        camera.lookAt(0, 0, 0);
-    }
-    
-    if (isPlaying && !isPaused) {
-        updateZoneQuests();
-        
-        // Animate dynamic objects
-        for (let obj of interactables) {
-            if (!obj.visible) continue;
-            if (obj.type === 'blessing') {
-                obj.mesh.children[0].rotation.y += delta;
-                obj.mesh.children[1].rotation.x += delta * 1.5;
-                obj.mesh.children[2].rotation.z += delta * 1.5;
             } else if (obj.type === 'symbol') {
+
                 obj.mesh.children[1].rotation.y += delta;
                 obj.mesh.children[1].position.y = 12.5 + Math.sin(Date.now()*0.003) * 0.5;
             }
@@ -818,7 +514,7 @@ function animate() {
             
             if (Math.random() < 0.15) { // 3x spawn rate
                 const geo = new THREE.DodecahedronGeometry(8 + Math.random() * 8); // varied sizes
-                const mat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+                const mat = new THREE.MeshToonMaterial({ color: 0x555555 });
                 const rock = new THREE.Mesh(geo, mat);
                 // Drop from above, rolling towards +X (East)
                 rock.position.set(player.position.x - 200, 100, Math.random() * 80 - 40);
@@ -1064,10 +760,92 @@ function animate() {
             }
         }
         
+        
+        // --- Player Animation ---
+        if (player) {
+            const time = Date.now() * 0.01;
+            const isMoving = (dx !== 0 || dz !== 0);
+            
+            let legFR = player.getObjectByName('legFR');
+            let legFL = player.getObjectByName('legFL');
+            let legBR = player.getObjectByName('legBR');
+            let legBL = player.getObjectByName('legBL');
+            let body = player.getObjectByName('body');
+            let tail = player.getObjectByName('tail');
+            let head = player.getObjectByName('head');
+            let earL = player.getObjectByName('earL');
+            let earR = player.getObjectByName('earR');
+            
+            // Tail and Idle Tweaks
+            if (tail) tail.rotation.z = Math.sin(time * 0.5) * 0.3;
+            
+            if (isMoving) {
+                // Running cycle
+                if (legFR) legFR.rotation.x = Math.sin(time) * 0.8;
+                if (legBL) legBL.rotation.x = Math.sin(time) * 0.8;
+                if (legFL) legFL.rotation.x = Math.sin(time + Math.PI) * 0.8;
+                if (legBR) legBR.rotation.x = Math.sin(time + Math.PI) * 0.8;
+                
+                // Bobbing body
+                if (body) body.position.y = 1.2 + Math.abs(Math.sin(time * 2)) * 0.5;
+                if (head) head.rotation.z = 0;
+            } else {
+                // Idle sniff/twitch
+                if (legFR) legFR.rotation.x = 0;
+                if (legBL) legBL.rotation.x = 0;
+                if (legFL) legFL.rotation.x = 0;
+                if (legBR) legBR.rotation.x = 0;
+                
+                if (body) body.position.y = 1.2;
+                
+                if (Math.random() < 0.01) {
+                    if (head) head.rotation.z = (Math.random() - 0.5) * 0.2; // Sniff
+                    if (earL) earL.rotation.x = Math.PI/2 + (Math.random() * 0.3); // Twitch
+                }
+            }
+            
+            // Jump Arc
+            if (window.playerVelocityY > 0) {
+                player.rotation.x = -0.2; // Tilt up
+            } else if (window.playerVelocityY < 0 && player.position.y > groundY + 1) {
+                player.rotation.x = 0.2; // Tilt down
+            } else {
+                player.rotation.x = 0; // Flat
+            }
+        }
+        // ------------------------
+
         // Check static hazards (Cacti, Thorns, Pits)
+
+        
         if (typeof hazards !== 'undefined') {
             for (let hazard of hazards) {
-                let hDist = Math.sqrt(Math.pow(player.position.x - hazard.mesh.position.x, 2) + Math.pow(player.position.z - hazard.mesh.position.z, 2));
+                let hDist = Math.sqrt(Math.pow(player.position.x - hazard.x, 2) + Math.pow(player.position.z - hazard.z, 2));
+                
+                // Idle sway
+                if (hazard.type === 'cactus' || hazard.type === 'thorn') {
+                    hazard.mesh.rotation.z = Math.sin(Date.now() * 0.002 + hazard.x) * 0.05;
+                }
+                
+                // Snap / Extend animation on approach
+                if (hazard.type === 'thorn_pit') {
+                    hazard.mesh.children.forEach(child => {
+                        if (child.name === 'pitSpike') {
+                            if (hDist < 30) {
+                                child.position.y = THREE.MathUtils.lerp(child.position.y, 8, 0.2); // Shoot up
+                            } else {
+                                child.position.y = THREE.MathUtils.lerp(child.position.y, -3, 0.1); // Hide
+                            }
+                        }
+                    });
+                } else if (hazard.type === 'thorn') {
+                    if (hDist < 25) {
+                        hazard.mesh.scale.setScalar(THREE.MathUtils.lerp(hazard.mesh.scale.x, 1.3, 0.2));
+                    } else {
+                        hazard.mesh.scale.setScalar(THREE.MathUtils.lerp(hazard.mesh.scale.x, 1.0, 0.1));
+                    }
+                }
+                
                 let hyDist = Math.abs(player.position.y - hazard.mesh.position.y);
                 if (hDist < hazard.radius && hyDist < 20) { // Hit hazard
                     if (!hazard.cooldown || Date.now() - hazard.cooldown > 1000) {

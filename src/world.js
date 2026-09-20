@@ -17,7 +17,7 @@ function addPlatform(scene, x, y, z, w, d, color = 0x88aa44) {
 
 function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
     const geo = new THREE.BoxGeometry(w, h, d);
-    const mat = new THREE.MeshStandardMaterial({ color: color, map: Textures.Stone, roughness: 0.9 });
+    const mat = new THREE.MeshToonMaterial({ color: color, map: Textures.Stone, roughness: 0.9 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, h/2, z);
     mesh.castShadow = true;
@@ -36,44 +36,87 @@ function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
 }
 
 
+
 function createDesertHazard(scene, type, x, z) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    
     if (type === 'cactus') {
-        const geo = new THREE.CylinderGeometry(4, 4, 25);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, 12.5, z);
-        scene.add(mesh);
-        hazards.push({ mesh: mesh, type: 'cactus', x: x, z: z, radius: 8 });
+        const mat = new THREE.MeshToonMaterial({ color: 0x2e8b57 });
         
-        const armGeo = new THREE.CylinderGeometry(2.5, 2.5, 10);
-        const arm1 = new THREE.Mesh(armGeo, mat);
+        // Saguaro Base
+        const geo = new THREE.CylinderGeometry(3, 4, 25, 8);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.y = 12.5;
+        group.add(mesh);
+        
+        // Arm 1
+        const arm1Geo = new THREE.CylinderGeometry(2, 2, 12, 8);
+        const arm1 = new THREE.Mesh(arm1Geo, mat);
+        arm1.position.set(4, 15, 0);
         arm1.rotation.z = Math.PI / 4;
-        arm1.position.set(5, 5, 0);
-        mesh.add(arm1);
-    } else if (type === 'thorn') {
-        const geo = new THREE.ConeGeometry(8, 10, 4);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, 5, z);
-        scene.add(mesh);
-        hazards.push({ mesh: mesh, type: 'thorn', x: x, z: z, radius: 8 });
-    } else if (type === 'thorn_pit') {
-        const holeGeo = new THREE.CircleGeometry(15, 16);
-        const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const holeMesh = new THREE.Mesh(holeGeo, holeMat);
-        holeMesh.rotation.x = -Math.PI / 2;
-        holeMesh.position.set(x, 0.1, z);
-        scene.add(holeMesh);
+        const arm1Up = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.5, 8, 8), mat);
+        arm1Up.position.set(8, 18, 0);
+        group.add(arm1, arm1Up);
         
-        const geo = new THREE.ConeGeometry(4, 10, 4);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
-        for(let i=0; i<4; i++) {
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set((Math.random()-0.5)*15, 2, (Math.random()-0.5)*15);
-            holeMesh.add(mesh);
+        // Arm 2
+        const arm2 = new THREE.Mesh(arm1Geo, mat);
+        arm2.position.set(-4, 10, 0);
+        arm2.rotation.z = -Math.PI / 4;
+        const arm2Up = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.5, 6, 8), mat);
+        arm2Up.position.set(-8, 12, 0);
+        group.add(arm2, arm2Up);
+        
+        // Add needles
+        const needleMat = new THREE.MeshBasicMaterial({color: 0xddccaa});
+        const needleGeo = new THREE.ConeGeometry(0.2, 2, 4);
+        for (let i=0; i<20; i++) {
+            const needle = new THREE.Mesh(needleGeo, needleMat);
+            needle.position.set((Math.random()-0.5)*8, Math.random()*20, (Math.random()-0.5)*8);
+            needle.lookAt(new THREE.Vector3(x, 10, z)); // point outwards roughly
+            group.add(needle);
         }
         
-        hazards.push({ mesh: holeMesh, type: 'thorn_pit', x: x, z: z, radius: 12 });
+        scene.add(group);
+        hazards.push({ mesh: group, type: 'cactus', x: x, z: z, radius: 8 });
+        
+    } else if (type === 'thorn') {
+        const mat = new THREE.MeshToonMaterial({ color: 0x5c4033 });
+        // Thorn Patch (Twisted Vines)
+        for (let i=0; i<5; i++) {
+            const geo = new THREE.ConeGeometry(2, 15, 5);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set((Math.random()-0.5)*8, 5, (Math.random()-0.5)*8);
+            mesh.rotation.x = (Math.random()-0.5)*Math.PI/2;
+            mesh.rotation.z = (Math.random()-0.5)*Math.PI/2;
+            group.add(mesh);
+        }
+        group.name = 'thornPatch';
+        scene.add(group);
+        hazards.push({ mesh: group, type: 'thorn', x: x, z: z, radius: 10 });
+        
+    } else if (type === 'thorn_pit') {
+        // A visual hole using dark color
+        const holeGeo = new THREE.CircleGeometry(15, 16);
+        const holeMat = new THREE.MeshBasicMaterial({ color: 0x110500 });
+        const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+        holeMesh.rotation.x = -Math.PI / 2;
+        holeMesh.position.y = 0.1;
+        group.add(holeMesh);
+        
+        // Thorns inside (pointing up, ready to snap)
+        const mat = new THREE.MeshToonMaterial({ color: 0x4a2e15 });
+        const geo = new THREE.ConeGeometry(3, 12, 4);
+        for(let i=0; i<8; i++) {
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set((Math.random()-0.5)*18, -3, (Math.random()-0.5)*18); // hidden slightly
+            mesh.rotation.x = (Math.random()-0.5)*0.5;
+            mesh.name = 'pitSpike';
+            group.add(mesh);
+        }
+        
+        scene.add(group);
+        hazards.push({ mesh: group, type: 'thorn_pit', x: x, z: z, radius: 14 });
     }
 }
 
@@ -99,10 +142,10 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     if (!hasRealModel) {
     
     if (type === 'shrine') {
-        const stone = new THREE.MeshStandardMaterial({map: Textures.Stone, roughness: 0.9, color: 0xaaaaaa});
+        const stone = new THREE.MeshToonMaterial({map: Textures.Stone, roughness: 0.9, color: 0xaaaaaa});
         const base = new THREE.Mesh(new THREE.BoxGeometry(16, 2, 16), stone);
         base.position.y = 1;
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 10, 4), new THREE.MeshStandardMaterial({color: 0xcc4400}));
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 10, 4), new THREE.MeshToonMaterial({color: 0xcc4400}));
         roof.position.y = 14;
         roof.rotation.y = Math.PI/4;
         const p1 = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 10), stone); p1.position.set(-6, 7, -6);
@@ -112,16 +155,16 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
         group.add(base, p1, p2, p3, p4, roof);
     } 
     else if (type === 'flag') {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 25), new THREE.MeshStandardMaterial({map: Textures.Wood, color: 0x664422, roughness: 0.9}));
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 25), new THREE.MeshToonMaterial({map: Textures.Wood, color: 0x664422, roughness: 0.9}));
         pole.position.y = 12.5;
-        const cloth = new THREE.Mesh(new THREE.ConeGeometry(4, 10, 3), new THREE.MeshStandardMaterial({color: color, map: Textures.Cloth, roughness: 0.9}));
+        const cloth = new THREE.Mesh(new THREE.ConeGeometry(4, 10, 3), new THREE.MeshToonMaterial({color: color, map: Textures.Cloth, roughness: 0.9}));
         cloth.rotation.z = -Math.PI / 2;
         cloth.position.set(5, 20, 0);
         group.add(pole, cloth);
     }
     else if (type === 'offering') {
         // Modak (Traditional Sweet) Shape
-        const mat = new THREE.MeshStandardMaterial({color: 0xfff0cc, roughness: 0.4});
+        const mat = new THREE.MeshToonMaterial({color: 0xfff0cc, roughness: 0.4});
         const body = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 16), mat);
         body.scale.set(1, 0.8, 1);
         body.position.y = 2.4;
@@ -131,60 +174,60 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     }
     else if (type === 'bridge_part') {
         if (id === 'part_rope') {
-            const rope = new THREE.Mesh(new THREE.TorusGeometry(3, 1, 8, 16), new THREE.MeshStandardMaterial({map: Textures.Wood, color: 0x8b4513, roughness: 0.9}));
+            const rope = new THREE.Mesh(new THREE.TorusGeometry(3, 1, 8, 16), new THREE.MeshToonMaterial({map: Textures.Wood, color: 0x8b4513, roughness: 0.9}));
             rope.rotation.x = Math.PI/2; rope.position.y = 1;
             group.add(rope);
         } else if (id === 'part_plank') {
-            const plank = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 4), new THREE.MeshStandardMaterial({map: Textures.Wood, color: 0x5c3a21, roughness: 0.9}));
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 4), new THREE.MeshToonMaterial({map: Textures.Wood, color: 0x5c3a21, roughness: 0.9}));
             plank.position.y = 0.5;
             group.add(plank);
         } else if (id === 'part_emblem') {
-            const emblem = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 16), new THREE.MeshStandardMaterial({map: Textures.Gold, metalness: 0.9, roughness: 0.1, color: 0xffdd00}));
+            const emblem = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 16), new THREE.MeshToonMaterial({map: Textures.Gold, metalness: 0.9, roughness: 0.1, color: 0xffdd00}));
             emblem.rotation.x = Math.PI/2; emblem.position.y = 3;
             group.add(emblem);
         }
     }
     else if (type === 'symbol') {
         // Ancient Obelisk with glowing orb
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3.5, 10, 4), new THREE.MeshStandardMaterial({map: Textures.Stone, color: 0x555555, roughness: 1.0}));
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3.5, 10, 4), new THREE.MeshToonMaterial({map: Textures.Stone, color: 0x555555, roughness: 1.0}));
         base.position.y = 5;
-        const orb = new THREE.Mesh(new THREE.OctahedronGeometry(2), new THREE.MeshStandardMaterial({color: color, emissive: color, emissiveIntensity: 0.8}));
+        const orb = new THREE.Mesh(new THREE.OctahedronGeometry(2), new THREE.MeshToonMaterial({color: color, emissive: color, emissiveIntensity: 0.8}));
         orb.position.y = 12.5;
         group.add(base, orb);
     }
     else if (type === 'blessing') {
         // Sacred glowing crystal with orbiting rings
-        const core = new THREE.Mesh(new THREE.OctahedronGeometry(2.5), new THREE.MeshStandardMaterial({color: color, emissive: color, emissiveIntensity: 1}));
+        const core = new THREE.Mesh(new THREE.OctahedronGeometry(2.5), new THREE.MeshToonMaterial({color: color, emissive: color, emissiveIntensity: 1}));
         core.position.y = 10;
-        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(4.5, 0.3, 8, 24), new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xffd700}));
+        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(4.5, 0.3, 8, 24), new THREE.MeshToonMaterial({color: 0xffd700, emissive: 0xffd700}));
         ring1.rotation.x = Math.PI/2; ring1.position.y = 10;
-        const ring2 = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.3, 8, 24), new THREE.MeshStandardMaterial({color: 0xffd700, emissive: 0xffd700}));
+        const ring2 = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.3, 8, 24), new THREE.MeshToonMaterial({color: 0xffd700, emissive: 0xffd700}));
         ring2.rotation.y = Math.PI/2; ring2.position.y = 10;
         group.add(core, ring1, ring2);
     }
     else if (type === 'prosperity_shrine') {
-        const mat = new THREE.MeshStandardMaterial({color: 0xaa6644, roughness: 0.8});
+        const mat = new THREE.MeshToonMaterial({color: 0xaa6644, roughness: 0.8});
         const table = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 4, 8), mat);
         table.position.y = 2;
-        const cloth = new THREE.Mesh(new THREE.CylinderGeometry(12.5, 12.5, 1, 8), new THREE.MeshStandardMaterial({color: 0xff4400}));
+        const cloth = new THREE.Mesh(new THREE.CylinderGeometry(12.5, 12.5, 1, 8), new THREE.MeshToonMaterial({color: 0xff4400}));
         cloth.position.y = 4.2;
         group.add(table, cloth);
     }
     else if (type === 'diya') {
-        const clayMat = new THREE.MeshStandardMaterial({color: 0x8b4513, roughness: 0.9});
+        const clayMat = new THREE.MeshToonMaterial({color: 0x8b4513, roughness: 0.9});
         const base = new THREE.Mesh(new THREE.CylinderGeometry(3, 2, 1, 16), clayMat);
         base.position.y = 0.5;
         const bowl = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 16, 0, Math.PI*2, 0, Math.PI/2), clayMat);
         bowl.rotation.x = Math.PI; // Flip half-sphere upside down to make a bowl
         bowl.position.y = 1.5;
-        const flame = new THREE.Mesh(new THREE.ConeGeometry(1, 3, 8), new THREE.MeshStandardMaterial({color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 2}));
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(1, 3, 8), new THREE.MeshToonMaterial({color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 2}));
         flame.position.y = 2.5;
         const diyaLight = new THREE.PointLight(0xffaa00, 1, 30);
         diyaLight.position.y = 3;
         group.add(base, bowl, flame, diyaLight);
     }
     else if (type === 'hidden_shrine' || type === 'mountain_shrine') {
-        const stoneMat = new THREE.MeshStandardMaterial({color: 0x777777, roughness: 1.0});
+        const stoneMat = new THREE.MeshToonMaterial({color: 0x777777, roughness: 1.0});
         const platform = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 20), stoneMat);
         platform.position.y = 1;
         const p1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 15, 8), stoneMat); p1.position.set(-8, 8.5, -8);
@@ -198,7 +241,7 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
         group.add(platform, p1, p2, p3, p4, roof, dome);
     }
     else if (type === 'corruption') {
-        const darkMat = new THREE.MeshStandardMaterial({color: 0x110000, emissive: 0x330000, roughness: 0.1, metalness: 0.8});
+        const darkMat = new THREE.MeshToonMaterial({color: 0x110000, emissive: 0x330000, roughness: 0.1, metalness: 0.8});
         const spike = new THREE.Mesh(new THREE.ConeGeometry(4, 20, 5), darkMat);
         spike.position.y = 10;
         const floatSpike1 = new THREE.Mesh(new THREE.ConeGeometry(2, 10, 4), darkMat);
@@ -242,12 +285,12 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
 }
 
 function createTree(scene, x, z) {
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2, 3, 15), new THREE.MeshStandardMaterial({map: Textures.Wood, color: 0x664422, roughness: 0.9}));
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2, 3, 15), new THREE.MeshToonMaterial({map: Textures.Wood, color: 0x664422, roughness: 0.9}));
     trunk.position.set(x, 7.5, z);
     trunk.castShadow = true;
     scene.add(trunk);
     
-    const leaves = new THREE.Mesh(new THREE.ConeGeometry(10, 25, 8), new THREE.MeshStandardMaterial({color: 0x2d4c1e}));
+    const leaves = new THREE.Mesh(new THREE.ConeGeometry(10, 25, 8), new THREE.MeshToonMaterial({color: 0x2d4c1e}));
     leaves.position.set(x, 25, z);
     leaves.castShadow = true;
     scene.add(leaves);
@@ -255,26 +298,48 @@ function createTree(scene, x, z) {
     walls.push({ minX: x - 3, maxX: x + 3, minZ: z - 3, maxZ: z + 3, isActive: true });
 }
 
+
 function createGroundTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#3a4a2a'; // dark grass
+    
+    // Base grass color
+    ctx.fillStyle = '#3a5a2a'; 
     ctx.fillRect(0,0,256,256);
-    ctx.fillStyle = '#425232'; // slightly lighter grass
-    ctx.fillRect(0,0,128,128);
-    ctx.fillRect(128,128,128,128);
+    
+    // Add soft painterly/stylized noise patches instead of checkerboard
+    for(let i=0; i<300; i++) {
+        let x = Math.random() * 256;
+        let y = Math.random() * 256;
+        let r = Math.random() * 15 + 5;
+        
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(70, 100, 40, 0.2)' : 'rgba(50, 75, 30, 0.2)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Wrap around for seamless texture
+        ctx.beginPath();
+        ctx.arc(x > 128 ? x - 256 : x + 256, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y > 128 ? y - 256 : y + 256, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(100, 100);
+    tex.repeat.set(50, 50); // Scale it nicely across the 3000x3000 floor
     return tex;
 }
+
 
 function createWorld(scene) {
     // Huge Open Floor
     const floorGeo = new THREE.PlaneGeometry(3000, 3000);
-    const floorMat = new THREE.MeshStandardMaterial({ map: createGroundTexture(), roughness: 0.9 });
+    const floorMat = new THREE.MeshToonMaterial({ map: createGroundTexture(), roughness: 0.9 });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
@@ -294,7 +359,7 @@ function createWorld(scene) {
     // ==========================================
     // 1. Lower wide base
     const baseGeo1 = new THREE.CylinderGeometry(200, 200, 2, 64);
-    const baseMat1 = new THREE.MeshStandardMaterial({color: 0x8B5A2B, roughness: 0.9}); // Warm sandstone
+    const baseMat1 = new THREE.MeshToonMaterial({color: 0x8B5A2B, roughness: 0.9}); // Warm sandstone
     const base1 = new THREE.Mesh(baseGeo1, baseMat1);
     base1.position.y = 1;
     base1.receiveShadow = true;
@@ -302,7 +367,7 @@ function createWorld(scene) {
     
     // 2. Middle elevated tier
     const baseGeo2 = new THREE.CylinderGeometry(150, 150, 2, 64);
-    const baseMat2 = new THREE.MeshStandardMaterial({color: 0xA0522D, roughness: 0.8});
+    const baseMat2 = new THREE.MeshToonMaterial({color: 0xA0522D, roughness: 0.8});
     const base2 = new THREE.Mesh(baseGeo2, baseMat2);
     base2.position.y = 3;
     base2.receiveShadow = true;
@@ -310,7 +375,7 @@ function createWorld(scene) {
     
     // 3. Central seating platform specifically for Ganapati
     const baseGeo3 = new THREE.CylinderGeometry(80, 80, 4, 32);
-    const baseMat3 = new THREE.MeshStandardMaterial({color: 0xCD853F, roughness: 0.7});
+    const baseMat3 = new THREE.MeshToonMaterial({color: 0xCD853F, roughness: 0.7});
     const base3 = new THREE.Mesh(baseGeo3, baseMat3);
     base3.position.y = 5;
     base3.receiveShadow = true;
@@ -318,7 +383,7 @@ function createWorld(scene) {
     
     // 4. Rangoli / Decorative Carpet effect in front
     const carpetGeo = new THREE.CylinderGeometry(40, 40, 0.5, 32);
-    const carpetMat = new THREE.MeshStandardMaterial({color: 0xFF4500, roughness: 1.0}); // Bright Orange/Red
+    const carpetMat = new THREE.MeshToonMaterial({color: 0xFF4500, roughness: 1.0}); // Bright Orange/Red
     const carpet = new THREE.Mesh(carpetGeo, carpetMat);
     carpet.position.set(0, 6, 60);
     carpet.receiveShadow = true;
@@ -336,8 +401,8 @@ function createWorld(scene) {
         // Decorative glowing lamp
         const diyaGroup = new THREE.Group();
         diyaGroup.position.set(px * 0.9, 4, pz * 0.9);
-        const diyaBase = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 2, 16), new THREE.MeshStandardMaterial({color: 0x555555}));
-        const diyaFlame = new THREE.Mesh(new THREE.ConeGeometry(1.5, 4, 8), new THREE.MeshStandardMaterial({color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 1.5}));
+        const diyaBase = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 2, 16), new THREE.MeshToonMaterial({color: 0x555555}));
+        const diyaFlame = new THREE.Mesh(new THREE.ConeGeometry(1.5, 4, 8), new THREE.MeshToonMaterial({color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 1.5}));
         diyaFlame.position.y = 3;
         const diyaLight = new THREE.PointLight(0xffaa00, 1, 50);
         diyaLight.position.y = 5;

@@ -7,9 +7,9 @@ function createMooshak() {
     const group = new THREE.Group();
     
     // High-Detail Procedural Mooshak (Rat)
-    const furMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.9 });
-    const pinkMat = new THREE.MeshStandardMaterial({ color: 0xffaaaa, roughness: 0.6 });
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+    const furMat = new THREE.MeshToonMaterial({ color: 0x666666, roughness: 0.9 });
+    const pinkMat = new THREE.MeshToonMaterial({ color: 0xffaaaa, roughness: 0.6 });
+    const blackMat = new THREE.MeshToonMaterial({ color: 0x111111, roughness: 0.1 });
     
     // Body (Teardrop-ish)
     const bodyGeo = new THREE.SphereGeometry(1.5, 32, 32);
@@ -67,8 +67,23 @@ function createMooshak() {
     const legBR = new THREE.Mesh(legGeo, furMat); legBR.position.set(0.8, 0.5, -1);
     const legBL = new THREE.Mesh(legGeo, furMat); legBL.position.set(-0.8, 0.5, -1);
 
+    
+    head.name = 'head';
+    tail.name = 'tail';
+    nose.name = 'nose';
+    earL.name = 'earL';
+    earR.name = 'earR';
+    body.name = 'body';
+    
     group.add(body, head, earL, earR, innerEarL, innerEarR, eyeL, eyeR, nose, tail);
+
+    
+    legFR.name = 'legFR';
+    legFL.name = 'legFL';
+    legBR.name = 'legBR';
+    legBL.name = 'legBL';
     group.add(legFR, legFL, legBR, legBL);
+
     
     group.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
     return group;
@@ -83,10 +98,10 @@ function createGanesha() {
     const group = new THREE.Group();
     
     // High-Detail Procedural Ganesha
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffa07a, roughness: 0.4 });
-    const goldMat = new THREE.MeshStandardMaterial({ map: Textures.Gold, metalness: 0.8, roughness: 0.2, color: 0xffcc00 });
-    const clothMat = new THREE.MeshStandardMaterial({ map: Textures.Cloth, color: 0xcc2222, roughness: 0.9 });
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+    const skinMat = new THREE.MeshToonMaterial({ color: 0xffa07a, roughness: 0.4 });
+    const goldMat = new THREE.MeshToonMaterial({ map: Textures.Gold, metalness: 0.8, roughness: 0.2, color: 0xffcc00 });
+    const clothMat = new THREE.MeshToonMaterial({ map: Textures.Cloth, color: 0xcc2222, roughness: 0.9 });
+    const whiteMat = new THREE.MeshToonMaterial({ color: 0xffffff, roughness: 0.8 });
     
     // Belly / Body
     const belly = new THREE.Mesh(new THREE.SphereGeometry(3, 32, 32), skinMat);
@@ -151,7 +166,7 @@ function createGanesha() {
     const armUL = new THREE.Mesh(armGeo, skinMat);
     armUL.position.set(3.2, 6.5, 0);
     armUL.rotation.z = -Math.PI/3;
-    const lotus = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), new THREE.MeshStandardMaterial({color: 0xff66bb}));
+    const lotus = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), new THREE.MeshToonMaterial({color: 0xff66bb}));
     lotus.position.set(4.5, 7.5, 0);
     
     // Lower Right (Blessing posture)
