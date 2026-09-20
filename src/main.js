@@ -19,34 +19,61 @@ function createBanasura() {
 
 function triggerBanasuraTaunt(blessingCount) {
     if (!banasuraMesh) return;
+    
+    // Mini-cutscene lock!
+    isPlaying = false; 
+    isCinematic = true;
+    
     banasuraTaunting = true;
     banasuraMesh.visible = true;
+    
+    let dialogue = "";
+    
     if (blessingCount === 1) {
         banasuraMesh.position.set(player.position.x, 30, player.position.z - 60);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        showToast("Banasura: 'One blessing. You think that will stop me? Keep searching, little one.'");
+        dialogue = "One blessing. You think that will stop me? Keep searching, little one.";
     } else if (blessingCount === 2) {
         banasuraMesh.position.set(player.position.x + 50, 40, player.position.z + 50);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        showToast("Banasura: 'Two... You are getting closer. But every step brings you closer to destruction.'");
+        dialogue = "Two... You are getting closer. But every step brings you closer to destruction.";
     } else if (blessingCount === 3) {
         banasuraMesh.position.set(player.position.x - 50, 20, player.position.z);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        showToast("Banasura: 'Three blessings... The final path belongs to me. Come to the Mountain!'");
+        dialogue = "Three blessings... The final path belongs to me. Come to the Mountain!";
     } else if (blessingCount === 4) {
         banasuraMesh.position.set(-1250, 55, 0);
         banasuraMesh.lookAt(player.position.x, player.position.y, player.position.z);
-        showToast("Banasura: 'You have gathered the blessings. Do you truly believe they can restore what I have destroyed?'");
+        dialogue = "You have gathered the blessings. Do you truly believe they can restore what I have destroyed?";
     }
+    
+    // Force camera to look at Banasura
+    camera.position.set(player.position.x, player.position.y + 20, player.position.z + 30);
+    camera.lookAt(banasuraMesh.position.x, banasuraMesh.position.y, banasuraMesh.position.z);
+    
+    uiCinematic.classList.add('active');
+    cinematicText.innerText = dialogue;
+    
     createSmokePuff(banasuraMesh.position);
+    
     if (blessingCount < 4) {
         setTimeout(() => {
             if (banasuraMesh) banasuraMesh.visible = false;
             createSmokePuff(banasuraMesh.position);
             banasuraTaunting = false;
-        }, 12000);
+            
+            // Release cinematic lock
+            uiCinematic.classList.remove('active');
+            isCinematic = false;
+            isPlaying = true;
+        }, 10000);
     } else {
         banasuraTaunting = false;
+        setTimeout(() => {
+            uiCinematic.classList.remove('active');
+            isCinematic = false;
+            isPlaying = true;
+        }, 8000);
     }
 }
 
