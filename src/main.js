@@ -187,7 +187,7 @@ scene.add(particles);
 
 
 // Input
-const keys = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, e: false };
+const keys = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, e: false, ' ': false };
 window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (keys.hasOwnProperty(k)) keys[k] = true;
@@ -566,28 +566,13 @@ function handleObjInteraction(obj) {
             let s3 = interactables.find(i => i.id === 'sym3'); if(s3) { s3.visible = true; s3.mesh.visible = true; }
         }
     }
-    else if (obj.type === 'offering') {
-        if (gameState.stage !== 'EAST_PROSPERITY') {
-            showToast("A festive offering. (Not needed yet)");
-            return;
-        }
-        obj.visible = false; obj.mesh.visible = false;
-        questData.offeringsFound = (questData.offeringsFound || 0) + 1;
-        showToast("Offering Collected! " + questData.offeringsFound + "/5");
-        if (questData.offeringsFound >= 5) {
-            showToast("All offerings collected! Return to the Prosperity Shrine.");
-            setObjective("Return to the Prosperity Shrine.");
-        }
-    }
-    else if (obj.type === 'prosperity_shrine') {
-        if (questData.offeringsFound >= 5 && !questData.prosperitySpawned) {
-            questData.prosperitySpawned = true;
-            showToast("The Shrine accepts the offerings. The Blessing appears!");
-            let b2 = interactables.find(i => i.id === 'blessing_prosperity');
-            if (b2) { b2.mesh.visible = true; b2.visible = true; }
-            setObjective("Collect the Blessing of Prosperity.");
-        } else if (questData.offeringsFound < 5) {
-            showToast("The Shrine requires 5 scattered offerings.");
+    else if (obj.type === 'mountain_shrine') {
+        if (gameState.stage === 'WEST_COURAGE') {
+            showToast("The Mountain Shrine opens! The Blessing of Courage is revealed!");
+            let b4 = interactables.find(i => i.id === 'blessing_courage');
+            if (b4) { b4.visible = true; b4.mesh.visible = true; }
+        } else {
+            showToast("A shrine standing firm against the rock slides.");
         }
     }
     else if (obj.type === 'diya') {
@@ -630,7 +615,9 @@ function handleObjInteraction(obj) {
         if (obj.id === 'blessing_wisdom') {
             showToast("BLESSING OF WISDOM OBTAINED\nThe path to the East is open!");
             gameState.stage = 'EAST_PROSPERITY';
-            setObjective("Find the 5 offerings in the Eastern Festival.");
+            setObjective("Climb the floating platforms in the East to find the blessing.");
+            let b2 = interactables.find(i => i.id === 'blessing_prosperity');
+            if (b2) { b2.visible = true; b2.mesh.visible = true; }
         }
         else if (obj.id === 'blessing_prosperity') {
             showToast("BLESSING OF PROSPERITY OBTAINED\nThe Southern winds clear the path!");
@@ -816,26 +803,38 @@ function animate() {
             inRunnerMode = true;
             camOffset.set(60, 40, 0); // Camera behind player looking West
             
-            if (Math.random() < 0.05) {
-                const geo = new THREE.DodecahedronGeometry(8);
+            if (Math.random() < 0.15) { // 3x spawn rate
+                const geo = new THREE.DodecahedronGeometry(8 + Math.random() * 8); // varied sizes
                 const mat = new THREE.MeshStandardMaterial({ color: 0x555555 });
                 const rock = new THREE.Mesh(geo, mat);
                 // Drop from above, rolling towards +X (East)
                 rock.position.set(player.position.x - 200, 100, Math.random() * 80 - 40);
                 scene.add(rock);
-                boulders.push({ mesh: rock, speed: 60 + Math.random() * 40 });
+                boulders.push({ 
+                    mesh: rock, 
+                    speedX: 80 + Math.random() * 60, // Faster
+                    speedZ: (Math.random() - 0.5) * 60 // Move side to side
+                });
             }
             
             for (let i = boulders.length - 1; i >= 0; i--) {
                 let b = boulders[i];
-                b.mesh.position.x += b.speed * delta; // Roll East
+                b.mesh.position.x += b.speedX * delta; // Roll East
+                b.mesh.position.z += b.speedZ * delta; // Roll sideways
                 b.mesh.position.y -= 50 * delta; // Fall down
-                if (b.mesh.position.y < 8) b.mesh.position.y = 8;
-                b.mesh.rotation.z -= b.speed * delta * 0.1;
+                
+                if (b.mesh.position.y < 8) {
+                    b.mesh.position.y = 8;
+                    // Boulders sometimes bounce off walls
+                    if (b.mesh.position.z > 40 || b.mesh.position.z < -40) {
+                        b.speedZ = -b.speedZ;
+                    }
+                }
+                b.mesh.rotation.z -= b.speedX * delta * 0.1;
                 
                 // Collision
                 let dist = Math.sqrt(Math.pow(player.position.x - b.mesh.position.x, 2) + Math.pow(player.position.z - b.mesh.position.z, 2));
-                if (dist < 12) {
+                if (dist < 15) {
                     // Hit!
                     scene.remove(b.mesh);
                     boulders.splice(i, 1);
@@ -890,15 +889,37 @@ function animate() {
             player.rotation.y = Math.atan2(dx, dz);
         }
         
-        // Dynamic Elevation for Central Shrine (Stairs effect)
+        // Dynamic Ground Y Calculation (Stairs & Parkour)
         const distToCenter = Math.sqrt(player.position.x * player.position.x + player.position.z * player.position.z);
-        let targetY = 0;
-        if (distToCenter < 80) targetY = 7;
-        else if (distToCenter < 150) targetY = 4;
-        else if (distToCenter < 200) targetY = 2;
+        let groundY = 0;
+        if (distToCenter < 80) groundY = 7;
+        else if (distToCenter < 150) groundY = 4;
+        else if (distToCenter < 200) groundY = 2;
         
-        // Smoothly step up/down
-        player.position.y += (targetY - player.position.y) * 0.2;
+        if (typeof platforms !== 'undefined') {
+            for (let p of platforms) {
+                if (Math.abs(player.position.x - p.x) <= p.width/2 && Math.abs(player.position.z - p.z) <= p.depth/2) {
+                    if (player.position.y >= p.y - 2) { 
+                        groundY = Math.max(groundY, p.y);
+                    }
+                }
+            }
+        }
+        
+        // Jump & Gravity Physics
+        if (typeof window.playerVelocityY === 'undefined') window.playerVelocityY = 0;
+        
+        window.playerVelocityY -= 150 * delta; // Gravity
+        player.position.y += window.playerVelocityY * delta;
+        
+        // Ground Collision
+        if (player.position.y <= groundY) {
+            player.position.y = groundY;
+            window.playerVelocityY = 0;
+            if (keys[' ']) {
+                window.playerVelocityY = 60; // Jump Force
+            }
+        }
         
         // === GUIDING ARROW LOGIC ===
         if (arrowContainer) {
@@ -916,15 +937,7 @@ function animate() {
                 else target = {x: 0, z: -400};
             }
             else if (gameState.stage === 'EAST_PROSPERITY') {
-                if ((questData.offeringsFound || 0) < 5) {
-                    // Point to the first uncollected offering
-                    for (let i=0; i<5; i++) {
-                        let off = interactables.find(obj => obj.id === 'offering'+i);
-                        if (off && off.visible) { target = off; break; }
-                    }
-                } else {
-                    target = {x: 550, z: 0}; // Prosperity Shrine
-                }
+                target = interactables.find(obj => obj.id === 'blessing_prosperity') || {x: 550, z: 0};
             }
             else if (gameState.stage === 'SOUTH_DEVOTION') {
                 if ((questData.diyasLit || 0) < 3) {
@@ -969,31 +982,53 @@ function animate() {
         }
         camera.lookAt(player.position);
         
-        let canInteract = false;
+        // Move and Check Traps dynamically
+        const timeNow = Date.now() * 0.002;
         for (let obj of interactables) {
-            if (!obj.visible) continue;
-            let dist = Math.sqrt(Math.pow(player.position.x - obj.x, 2) + Math.pow(player.position.z - obj.z, 2));
+            if (!obj.visible || obj.type !== 'corruption_trap') continue;
             
-            // Check traps (Difficulty increase)
-            if (obj.type === 'corruption_trap' && dist < 15) {
+            // Movement logic based on trap ID
+            if (obj.id.startsWith('trap_n')) {
+                // North traps sweep side to side
+                obj.mesh.position.x = obj.x + Math.sin(timeNow + obj.z) * 80;
+            } else if (obj.id.startsWith('trap_p')) {
+                // Parkour traps move fast across the platforms
+                obj.mesh.position.z = obj.z + Math.sin(timeNow * 3 + obj.x) * (obj.id === 'trap_p2' ? 60 : 30);
+            } else if (obj.id.startsWith('trap_s')) {
+                // South traps move in quick circles
+                obj.mesh.position.x = obj.x + Math.cos(timeNow * 2.5 + obj.z) * 60;
+                obj.mesh.position.z = obj.z + Math.sin(timeNow * 2.5 + obj.z) * 60;
+            }
+            
+            let tDist = Math.sqrt(Math.pow(player.position.x - obj.mesh.position.x, 2) + Math.pow(player.position.z - obj.mesh.position.z, 2));
+            let yDist = Math.abs(player.position.y - obj.mesh.position.y);
+            
+            if (tDist < 18 && yDist < 20) {
                 // Take damage and bounce back
                 gameState.health--;
                 updateHUD();
                 showToast("You touched corruption! Health remaining: " + gameState.health);
                 
-                // Bounce back
-                player.position.x += (player.position.x - obj.x) * 0.5;
-                player.position.z += (player.position.z - obj.z) * 0.5;
+                // Bounce back aggressively
+                player.position.x += (player.position.x - obj.mesh.position.x) * 1.5;
+                player.position.z += (player.position.z - obj.mesh.position.z) * 1.5;
                 
                 if (gameState.health <= 0) {
-                    showGameOver();
+                    showToast("YOU WERE OVERWHELMED! Restarting...");
+                    setTimeout(revivePlayer, 2000);
                 }
-                break; // Stop checking
             }
+        }
+        
+        let canInteract = false;
+        for (let obj of interactables) {
+            if (!obj.visible) continue;
+            let dist = Math.sqrt(Math.pow(player.position.x - obj.x, 2) + Math.pow(player.position.z - obj.z, 2));
+            let yDist = Math.abs(player.position.y - obj.mesh.position.y);
             
             // Check interactable prompt
             let interactRadius = (obj.type === 'blessing') ? 60 : 25;
-            if (dist < interactRadius && obj.type !== 'corruption_trap') { 
+            if (dist < interactRadius && yDist < 30 && obj.type !== 'corruption_trap') { 
                 canInteract = true; 
             }
         }

@@ -2,7 +2,18 @@
 const walls = [];
 const interactables = [];
 const hazards = [];
+const platforms = [];
 let gateVighna = null;
+
+function addPlatform(scene, x, y, z, w, d, color = 0x88aa44) {
+    const geo = new THREE.BoxGeometry(w, 5, d);
+    const mat = new THREE.MeshPhongMaterial({ color: color });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y - 2.5, z); // Top of the platform is exactly at 'y'
+    scene.add(mesh);
+    platforms.push({ x, y, z, width: w, depth: d });
+    return mesh;
+}
 
 function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
     const geo = new THREE.BoxGeometry(w, h, d);
@@ -23,9 +34,9 @@ function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
     return wallObj;
 }
 
-function createInteractable(scene, id, type, x, z, color, geoType) {
+function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     const group = new THREE.Group();
-    group.position.set(x, 0, z);
+    group.position.set(x, y, z);
     
     let hasRealModel = false;
     
@@ -335,18 +346,20 @@ function createWorld(scene) {
         if (safe) addWall(scene, bx, bz, 30 + Math.random()*20, 30 + Math.random()*20, 0xaa6644, 20 + Math.random()*30);
     }
     
-    // City Puzzle (Prosperity)
-    // 5 scattered offerings
-    createInteractable(scene, 'offering0', 'offering', 350, -150, 0xffffff, 'sphere');
-    createInteractable(scene, 'offering1', 'offering', 500, 50, 0xffffff, 'sphere');
-    createInteractable(scene, 'offering2', 'offering', 400, 200, 0xffffff, 'sphere');
-    createInteractable(scene, 'offering3', 'offering', 650, -50, 0xffffff, 'sphere');
-    createInteractable(scene, 'offering4', 'offering', 250, 100, 0xffffff, 'sphere');
+    // City Puzzle (Prosperity) - PARKOUR CHALLENGE
+    addPlatform(scene, 250, 20, 0, 40, 40);
+    addPlatform(scene, 320, 40, 0, 30, 30);
+    addPlatform(scene, 320, 60, -70, 30, 30);
+    addPlatform(scene, 390, 80, -70, 30, 30);
+    addPlatform(scene, 460, 100, -70, 20, 20); // Small tricky jump
+    addPlatform(scene, 460, 120, 0, 20, 20);
+    addPlatform(scene, 550, 140, 0, 40, 40); // Final Platform
     
-    // The Prosperity Shrine (Drop-off point)
-    createInteractable(scene, 'prosperity_shrine', 'prosperity_shrine', 550, 0, 0xaa6644, 'box');
+    // Traps on platforms
+    createInteractable(scene, 'trap_p1', 'corruption_trap', 320, 0, 0xff0000, 'box', 40);
+    createInteractable(scene, 'trap_p2', 'corruption_trap', 390, -70, 0xff0000, 'box', 80);
     
-    let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, -20, 0x00ff00, 'octahedron');
+    let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, 0, 0x00ff00, 'octahedron', 140);
     b2.mesh.visible = false; b2.visible = false;
 
     // ==========================================
