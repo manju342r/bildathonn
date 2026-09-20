@@ -107,7 +107,7 @@ function createDesertHazard(scene, type, x, z) {
         // Thorns inside (pointing up, ready to snap)
         const mat = new THREE.MeshToonMaterial({ color: 0x4a2e15 });
         const geo = new THREE.ConeGeometry(3, 12, 4);
-        for(let i=0; i<8; i++) {
+        for(let i=0; i<15; i++) {
             const mesh = new THREE.Mesh(geo, mat);
             mesh.position.set((Math.random()-0.5)*18, -3, (Math.random()-0.5)*18); // hidden slightly
             mesh.rotation.x = (Math.random()-0.5)*0.5;
@@ -357,6 +357,41 @@ function createWorld(scene) {
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
+
+    // North Desert Floor Overlay
+    const sandCanvas = document.createElement('canvas');
+    sandCanvas.width = 256; sandCanvas.height = 256;
+    const sandCtx = sandCanvas.getContext('2d');
+    sandCtx.fillStyle = '#e8c396'; // Sand base
+    sandCtx.fillRect(0,0,256,256);
+    for(let i=0; i<300; i++) {
+        let x = Math.random() * 256; let y = Math.random() * 256; let r = Math.random() * 15 + 5;
+        sandCtx.fillStyle = Math.random() > 0.5 ? 'rgba(210, 180, 140, 0.4)' : 'rgba(230, 200, 150, 0.4)';
+        sandCtx.beginPath(); sandCtx.arc(x, y, r, 0, Math.PI * 2); sandCtx.fill();
+        sandCtx.beginPath(); sandCtx.arc(x > 128 ? x - 256 : x + 256, y, r, 0, Math.PI * 2); sandCtx.fill();
+        sandCtx.beginPath(); sandCtx.arc(x, y > 128 ? y - 256 : y + 256, r, 0, Math.PI * 2); sandCtx.fill();
+    }
+    const sandTex = new THREE.CanvasTexture(sandCanvas);
+    sandTex.wrapS = THREE.RepeatWrapping; sandTex.wrapT = THREE.RepeatWrapping; sandTex.repeat.set(20, 15);
+    const desertFloorGeo = new THREE.PlaneGeometry(1000, 750);
+    const desertFloorMat = new THREE.MeshToonMaterial({ map: sandTex, roughness: 1.0 });
+    const desertFloor = new THREE.Mesh(desertFloorGeo, desertFloorMat);
+    desertFloor.rotation.x = -Math.PI / 2;
+    desertFloor.position.set(0, 0.1, -500); // Overlay on North area
+    desertFloor.receiveShadow = true;
+    scene.add(desertFloor);
+    
+    // Some scattered rocks along the border to hide the seam (z = -125)
+    for(let i=0; i<40; i++) {
+        let rx = (Math.random() - 0.5) * 1000;
+        let rGeo = new THREE.DodecahedronGeometry(2 + Math.random()*4);
+        let rMat = new THREE.MeshToonMaterial({color: 0x887766});
+        let rock = new THREE.Mesh(rGeo, rMat);
+        rock.position.set(rx, 1, -125 + (Math.random()-0.5)*20);
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        scene.add(rock);
+    }
+
     
     // World Borders
     addWall(scene, 0, -1500, 3000, 50, 0x222222, 100);
@@ -440,10 +475,10 @@ function createWorld(scene) {
     // ==========================================
     // Scattered ruins (Desert feel)
     for(let i=0; i<30; i++) {
-        let bx = (Math.random() - 0.5) * 500;
-        let bz = -200 - Math.random() * 500;
+        let bx = (Math.random() - 0.5) * 800;
+        let bz = -150 - Math.random() * 600;
         let safe = true;
-        if (Math.abs(bx) < 40 && bz > -300) safe = false; // Keep main path clear
+        if (Math.abs(bx) < 60 && bz > -350) safe = false; // Keep main path clear
         for (let obj of interactables) {
             if (Math.abs(bx - obj.x) < 40 && Math.abs(bz - obj.z) < 40) { safe = false; break; }
         }
