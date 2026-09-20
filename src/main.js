@@ -1,3 +1,11 @@
+
+function setObjective(text) { 
+    const elDesc = document.getElementById('quest-desc'); 
+    const elTitle = document.getElementById('quest-title');
+    if(elTitle) elTitle.innerText = "CURRENT OBJECTIVE";
+    if(elDesc) elDesc.innerText = text; 
+}
+
 function startQuiz() { console.log("Quiz UI not yet loaded"); }
 // Game State
 let gameState = {
@@ -1138,10 +1146,15 @@ function animate() {
             let earL = player.getObjectByName('earL');
             let earR = player.getObjectByName('earR');
 
-            let speed = Math.sqrt(velocityX*velocityX + velocityZ*velocityZ);
+            
+            let isRunning = (typeof dx !== 'undefined') ? (dx !== 0 || dz !== 0) : false;
+            let velocityY = (typeof window.playerVelocityY !== 'undefined') ? window.playerVelocityY : 0;
+            // The isGrounded check needs groundY
+            let isGrounded = (typeof groundY !== 'undefined') ? (player.position.y <= groundY + 0.5) : true;
+
             let time = Date.now() * 0.015;
             
-            if (speed > 5) { // Running
+            if (isRunning) { // Running
                 if (legFR) legFR.rotation.x = Math.sin(time) * 0.8;
                 if (legFL) legFL.rotation.x = Math.sin(time + Math.PI) * 0.8;
                 if (legBR) legBR.rotation.x = Math.sin(time + Math.PI) * 0.8;
