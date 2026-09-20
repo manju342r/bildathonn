@@ -319,54 +319,104 @@ That is why, for millions of devotees, Ganesha is not only remembered as the ele
 When you are ready, start the quiz to test your knowledge!`,
     questions: [
         {
-            q: "Parvati created Ganesha and gave him one command. What was it?",
-            options: [
-                "Guard the entrance and let no one enter without her permission.",
-                "Bring flowers from the forest.",
-                "Welcome all guests to Kailash.",
-                "Follow Lord Shiva wherever he goes."
-            ],
+            q: "Who created Ganesha?",
+            options: ["Lord Shiva", "Goddess Parvati", "Lord Vishnu", "Lord Brahma"],
+            correct: 1
+        },
+        {
+            q: "Why did Parvati ask Ganesha to guard the entrance?",
+            options: ["She wanted him to protect Mount Kailash", "She wanted him to stop Kartikeya", "She wanted privacy while she bathed", "She wanted him to welcome visitors"],
+            correct: 2
+        },
+        {
+            q: "Who arrived at the entrance while Ganesha was guarding it?",
+            options: ["Lord Vishnu", "Lord Shiva", "Lord Indra", "Kubera"],
+            correct: 1
+        },
+        {
+            q: "Why did Ganesha refuse to let Shiva enter?",
+            options: ["He disliked Shiva", "Shiva had challenged him", "Parvati had ordered him not to let anyone enter", "Kartikeya had told him to stop Shiva"],
+            correct: 2
+        },
+        {
+            q: "What happened during the confrontation between Shiva and Ganesha?",
+            options: ["Ganesha defeated Shiva", "Shiva sent Ganesha away", "Shiva severed Ganesha’s head", "Ganesha ran away from Kailash"],
+            correct: 2
+        },
+        {
+            q: "How did Parvati react when she discovered what had happened to Ganesha?",
+            options: ["She became angry and demanded that Ganesha be restored", "She left Mount Kailash", "She asked Kartikeya to find Ganesha", "She accepted what had happened"],
             correct: 0
         },
         {
-            q: "When Kartikeya flew around the world to win the challenge, what did Ganesha do instead?",
-            options: [
-                "He gave up and accepted defeat.",
-                "He rode his mouse and tried to keep up.",
-                "He walked around his parents, saying they are his entire world.",
-                "He asked Shiva to stop the challenge."
-            ],
+            q: "What animal’s head was placed on Ganesha’s body?",
+            options: ["Lion", "Horse", "Elephant", "Bull"],
             correct: 2
         },
         {
-            q: "Why does Ganesha have a broken tusk?",
-            options: [
-                "He broke it during the battle at the entrance of Kailash.",
-                "He broke it off to use as a writing instrument while writing the Mahabharata.",
-                "Kartikeya broke it during their competition.",
-                "It broke during the battle with Kubera."
-            ],
+            q: "What is one of Ganesha’s famous names meaning 'remover of obstacles'?",
+            options: ["Vighnaharta", "Mahadeva", "Narayana", "Trivikrama"],
+            correct: 0
+        },
+        {
+            q: "Who is Ganesha’s brother in the story?",
+            options: ["Hanuman", "Kartikeya", "Kubera", "Vyasa"],
             correct: 1
         },
         {
-            q: "What lesson did Kubera learn when he invited Ganesha to his great feast?",
-            options: [
-                "That Ganesha is the strongest of all gods.",
-                "That wealth and pride alone cannot bring true fulfillment.",
-                "That Ganesha loves food more than anything.",
-                "That Shiva should have attended the feast instead."
-            ],
-            correct: 1
-        },
-        {
-            q: "What does Ganesha's large belly symbolize in traditional interpretations?",
-            options: [
-                "That he loves modaks.",
-                "That he is the richest deity.",
-                "The ability to accept and digest all of life's experiences — both good and bad.",
-                "That he is more powerful than other gods."
-            ],
+            q: "What was the challenge given to Ganesha and Kartikeya?",
+            options: ["To defeat a demon", "To find a hidden treasure", "To travel around the world and return first", "To climb Mount Kailash"],
             correct: 2
+        },
+        {
+            q: "What was Kartikeya’s traditional vehicle?",
+            options: ["Mouse", "Elephant", "Peacock", "Swan"],
+            correct: 2
+        },
+        {
+            q: "Why did Ganesha walk around Shiva and Parvati instead of traveling around the world?",
+            options: ["He was too tired to travel", "He believed his parents represented his entire world", "He wanted Kartikeya to win", "His mouse was missing"],
+            correct: 1
+        },
+        {
+            q: "What happened to one of Ganesha’s tusks in the Mahabharata story?",
+            options: ["Shiva broke it", "Kartikeya broke it", "Ganesha broke it himself to use as a writing instrument", "Vyasa broke it"],
+            correct: 2
+        },
+        {
+            q: "Who is traditionally associated with dictating the Mahabharata to Ganesha?",
+            options: ["Kubera", "Vyasa", "Kartikeya", "Indra"],
+            correct: 1
+        },
+        {
+            q: "What condition did Ganesha give Vyasa before agreeing to write the Mahabharata?",
+            options: ["Vyasa had to stop after every verse", "Vyasa had to dictate continuously without stopping", "Vyasa had to write the first chapter himself", "Vyasa had to travel around the world"],
+            correct: 1
+        },
+        {
+            q: "Who invited Ganesha to the grand feast in the story about wealth and pride?",
+            options: ["Kubera", "Kartikeya", "Vyasa", "Indra"],
+            correct: 0
+        },
+        {
+            q: "What lesson does the story of Kubera and Ganesha primarily teach?",
+            options: ["Physical strength is everything", "Wealth and pride alone cannot bring true fulfillment", "Traveling is more important than studying", "Food should never be shared"],
+            correct: 1
+        },
+        {
+            q: "What is traditionally associated with Ganesha’s large ears?",
+            options: ["Speed", "Courage", "Listening carefully", "Physical strength"],
+            correct: 2
+        },
+        {
+            q: "What sweet is especially associated with Lord Ganesha?",
+            options: ["Jalebi", "Modak", "Gulab jamun", "Laddu"],
+            correct: 1
+        },
+        {
+            q: "What happens during Ganesha Visarjan?",
+            options: ["The idol is placed inside a temple permanently", "The idol is carried in a procession and immersed in water", "The idol is taken to Mount Kailash", "The idol is buried underground"],
+            correct: 1
         }
     ]
 };
