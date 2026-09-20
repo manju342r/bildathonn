@@ -104,7 +104,7 @@ function loadModel(name, path) {
             
             // 4. Normalize the scale (Ganesha = ~12 units tall)
             const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = name === 'ganesha' ? 60 : 5; 
+            const targetSize = name === 'ganesha' ? 60 : (name === 'banasura' ? 45 : 5); 
             const scale = maxDim > 0 ? targetSize / maxDim : 1;
             wrapper.scale.set(scale, scale, scale);
             
@@ -546,8 +546,8 @@ function handleGaneshaInteraction() {
             gameState.stage = 'NORTH_DEVOTION';
             setObjective("Find the Forgotten Shrine and 3 Unlit Diyas in the North.");
         }, 9000);
-    } else if (gameState.stage === 'RETURN_CENTER') {
-        showToast("The four blessings resonate, emitting a blinding light from the statue!");
+    } else if (gameState.stage === 'RETURN_CENTER' && gameState.sacredDiya) {
+        showToast("The four blessings and the Sacred Diya resonate, emitting a blinding light from the shrine!");
         setTimeout(() => {
             showToast("Banasura: 'FOOL! I WILL NOT LET YOU SUMMON HIM!'");
             startFinalVighnaEvent();
@@ -998,7 +998,9 @@ function animate() {
         // === GUIDING ARROW LOGIC ===
         if (arrowContainer) {
             arrowContainer.position.copy(player.position);
-            arrowContainer.position.y += 25 + Math.sin(Date.now() * 0.005) * 3; // Hover much higher above player
+            arrowContainer.position.y += 25 + Math.sin(Date.now() * 0.003) * 4; // Hover and bob smoothly
+            arrowContainer.scale.setScalar(1 + Math.sin(Date.now() * 0.005) * 0.15); // Subtle pulse
+            arrowContainer.children[0].rotation.z += 0.05; // Spin the ring
 
             
             let target = null;
@@ -1069,9 +1071,10 @@ function animate() {
             if (!obj.visible || obj.type !== 'corruption_trap') continue;
             
             // Movement logic based on trap ID
-            if (obj.id.startsWith('trap_n')) {
-                // North traps sweep side to side
-                obj.mesh.position.x = obj.x + Math.sin(timeNow + obj.z) * 80;
+            if (obj.id.startsWith('trap_s_circle')) {
+                // South traps move in fast sweeping circles
+                obj.mesh.position.x = obj.x + Math.cos(timeNow * 2 + obj.z) * 60;
+                obj.mesh.position.z = obj.z + Math.sin(timeNow * 2 + obj.z) * 60;
             } else if (obj.id.startsWith('trap_p')) {
                 // Parkour traps move fast across the platforms
                 obj.mesh.position.z = obj.z + Math.sin(timeNow * 3 + obj.x) * (obj.id === 'trap_p2' ? 60 : 30);
@@ -1264,7 +1267,8 @@ async function initGame() {
         loadModel('ganesha', 'assets/ganesha.glb'),
         loadModel('mooshak', 'assets/mooshak.glb'),
         loadModel('modak', 'assets/modak.glb'),
-        loadModel('flag', 'assets/flag.glb')
+        loadModel('flag', 'assets/flag.glb'),
+        loadModel('banasura', 'assets/banasura.glb')
     ]);
     
     document.getElementById('loading-screen').classList.remove('active');
@@ -1275,6 +1279,7 @@ async function initGame() {
 
     // Characters
     player = createMooshak();
+    createBanasura();
     if (localStorage.getItem('mooshakScale')) {
         player.scale.setScalar(parseFloat(localStorage.getItem('mooshakScale')));
     } else {

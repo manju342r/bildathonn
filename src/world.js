@@ -189,7 +189,7 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     }
     else if (type === 'symbol') {
         // Ancient Obelisk with glowing orb
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3.5, 10, 4), new THREE.MeshToonMaterial({map: Textures.Stone, color: 0x555555, roughness: 1.0}));
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 3.5, 10, 4), new THREE.MeshToonMaterial({map: Textures.Stone, color: 0xb87333, roughness: 1.0}));
         base.position.y = 5;
         const orb = new THREE.Mesh(new THREE.OctahedronGeometry(2), new THREE.MeshToonMaterial({color: color, emissive: color, emissiveIntensity: 0.8}));
         orb.position.y = 12.5;
@@ -442,7 +442,7 @@ function createWorld(scene) {
         let angle = (i / 12) * Math.PI * 2;
         let px = Math.sin(angle) * 140;
         let pz = Math.cos(angle) * 140;
-        addWall(scene, px, pz, 10, 10, 0xFFD700, 80); // Tall golden/stone pillars
+        addWall(scene, px, pz, 10, 10, 0xfaedcd, 80); // Tall golden/stone pillars
         
         // Add a warm glowing diya at the base of each pillar
         
@@ -503,12 +503,7 @@ function createWorld(scene) {
         createDesertHazard(scene, 'thorn_pit', (Math.random()-0.5)*850, -150 - Math.random()*700);
     }
     
-    // Add "health eliminating lights" (Sweeping Corruption Traps) to the North
-    createInteractable(scene, 'trap_n1', 'corruption_trap', 0, -200, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n2', 'corruption_trap', -200, -380, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n3', 'corruption_trap', 250, -480, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n4', 'corruption_trap', -100, -680, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n5', 'corruption_trap', 150, -780, 0xff0000, 'box');
+
 
 
 // ==========================================
@@ -574,23 +569,44 @@ function createWorld(scene) {
     createInteractable(scene, 'trap_e1', 'corruption_trap', 300, 50, 0xff0000, 'box');
     createInteractable(scene, 'trap_e2', 'corruption_trap', 450, -100, 0xff0000, 'box');
     createInteractable(scene, 'trap_e3', 'corruption_trap', 550, 150, 0xff0000, 'box');
-    // South traps (Fast circular sweeping traps moved to Ancient Grove)
-    createInteractable(scene, 'trap_s1', 'corruption_trap', -80, 350, 0xff0000, 'box');
-    createInteractable(scene, 'trap_s2', 'corruption_trap', 120, 450, 0xff0000, 'box');
-    createInteractable(scene, 'trap_s3', 'corruption_trap', 0, 520, 0xff0000, 'box');
+    // South traps - Fast circular sweeping traps
+    createInteractable(scene, 'trap_s_circle1', 'corruption_trap', -100, 300, 0xff0000, 'box');
+    createInteractable(scene, 'trap_s_circle2', 'corruption_trap', 150, 400, 0xff0000, 'box');
+    createInteractable(scene, 'trap_s_circle3', 'corruption_trap', 0, 500, 0xff0000, 'box');
 
 // ==========================================
     // WEST: MOUNTAIN (COURAGE) (-400, 0)
     // ==========================================
     // Giant Mountain Walls forming a canyon
-    addWall(scene, -400, -100, 600, 20, 0x444444, 80);
-    addWall(scene, -400, 100, 600, 20, 0x444444, 80);
+    addWall(scene, -400, -100, 600, 20, 0x5c5346, 80);
+    addWall(scene, -400, 100, 600, 20, 0x5c5346, 80);
     
-    // The Shrine at the end of the canyon
-    createInteractable(scene, 'mountain_shrine', 'mountain_shrine', -800, 0, 0x666666, 'box');
+    // Massive Explorable Summit behind the canyon
+    // A huge ramp leading up
+    addPlatform(scene, -850, 15, 0, 100, 200);
+    addPlatform(scene, -950, 35, 0, 100, 200);
+    addPlatform(scene, -1150, 55, 0, 300, 300); // The main summit area
     
-    let b4 = createInteractable(scene, 'blessing_courage', 'blessing', -800, 0, 0x00ff00, 'octahedron');
+    // The Shrine at the summit
+    let mountainShrine = createInteractable(scene, 'mountain_shrine', 'mountain_shrine', -1150, 0, 0x666666, 'box');
+    mountainShrine.mesh.position.y = 55; // Sit on the summit
+
+    let b4 = createInteractable(scene, 'blessing_courage', 'blessing', -1100, 0, 0x00ff00, 'octahedron', 65);
     b4.mesh.visible = false; b4.visible = false;
+    
+    // Banasura Placeholder / The antagonist standing at the top causing the rock slide
+    let banasuraBase = addWall(scene, -1250, 0, 40, 40, 0x221111, 20);
+    banasuraBase.position.y = 55; // Placeholder base for Banasura's actual model
+    
+    // The Sacred Diya - the final required object
+    let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1200, 0, 0xffd700, 'cylinder');
+    sacredDiya.mesh.position.y = 60; 
+    sacredDiya.mesh.scale.set(1.5, 1.5, 1.5);
+    // Add a majestic golden light to it
+    const sacredLight = new THREE.PointLight(0xffdd44, 2.5, 100);
+    sacredLight.position.y = 5;
+    sacredDiya.mesh.add(sacredLight);
+    
 }
 
 function checkCollision(newX, newZ, radius) {
