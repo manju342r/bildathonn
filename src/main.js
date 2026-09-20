@@ -59,11 +59,23 @@ let audioCtx;
 
 // 3D Asset Management System
 const modelCache = {};
-const gltfLoader = new THREE.GLTFLoader();
+let gltfLoader = null;
+try {
+    if (typeof THREE.GLTFLoader !== 'undefined') {
+        gltfLoader = new THREE.GLTFLoader();
+    }
+} catch (e) {
+    console.warn("GLTFLoader failed to initialize:", e);
+}
 
 // Helper to load realistic .glb models if they exist in the assets folder
 function loadModel(name, path) {
     return new Promise((resolve) => {
+        if (!gltfLoader) {
+            console.warn(`GLTFLoader not available. Falling back to procedural for ${name}.`);
+            resolve(false);
+            return;
+        }
         gltfLoader.load(path, (gltf) => {
             const model = gltf.scene;
             
@@ -173,7 +185,22 @@ for(let i=0; i<pCount*3; i+=3) {
     pPos[i+2] = (Math.random() - 0.5) * 2000;
 }
 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-const pMat = new THREE.PointsMaterial({color: 0xffaa00, size: 3, transparent: true, opacity: 0.8});
+
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 32; pCanvas.height = 32;
+    const pCtx = pCanvas.getContext('2d');
+    const gradient = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.2, 'rgba(255,255,200,0.8)');
+    gradient.addColorStop(1, 'rgba(255,255,200,0)');
+    pCtx.fillStyle = gradient;
+    pCtx.fillRect(0,0,32,32);
+    const pTex = new THREE.CanvasTexture(pCanvas);
+    
+    const pMat = new THREE.PointsMaterial({
+        color: 0xffffee, size: 6, map: pTex, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+
 const particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
@@ -485,9 +512,9 @@ function checkInteraction() {
             
             if (obj.type === 'blessing') {
                 obj.mesh.rotation.y += delta;
-                obj.mesh.position.y = obj.y + Math.sin(Date.now() * 0.003) * 5; // Bobbing
-                if (obj.mesh.children[2]) {
-                    obj.mesh.children[2].scale.setScalar(1 + Math.sin(Date.now() * 0.005) * 0.1); // Aura pulse
+                obj.mesh.position.y = (obj.baseY || 10) + Math.sin(Date.now() * 0.003) * 5; // Bobbing
+                if (obj.mesh.children[0] && obj.mesh.children[0].children[2]) {
+                    obj.mesh.children[0].children[2].scale.setScalar(1 + Math.sin(Date.now() * 0.005) * 0.1); // Aura pulse
                 }
             } else if (obj.type === 'symbol') {
 

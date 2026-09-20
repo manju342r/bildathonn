@@ -197,13 +197,22 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     }
     else if (type === 'blessing') {
         // Sacred glowing crystal with orbiting rings
-        const core = new THREE.Mesh(new THREE.OctahedronGeometry(2.5), new THREE.MeshToonMaterial({color: color, emissive: color, emissiveIntensity: 1}));
-        core.position.y = 10;
-        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(4.5, 0.3, 8, 24), new THREE.MeshToonMaterial({color: 0xffd700, emissive: 0xffd700}));
-        ring1.rotation.x = Math.PI/2; ring1.position.y = 10;
-        const ring2 = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.3, 8, 24), new THREE.MeshToonMaterial({color: 0xffd700, emissive: 0xffd700}));
-        ring2.rotation.y = Math.PI/2; ring2.position.y = 10;
-        group.add(core, ring1, ring2);
+        const mat = new THREE.MeshToonMaterial({color: color, emissive: color, emissiveIntensity: 0.5});
+        const modakGeo = new THREE.ConeGeometry(3, 6, 16, 1, false, 0, Math.PI * 2);
+        const modakBase = new THREE.SphereGeometry(3, 16, 16, 0, Math.PI * 2, Math.PI/2, Math.PI/2);
+        
+        const top = new THREE.Mesh(modakGeo, mat);
+        top.position.y = 3;
+        const bottom = new THREE.Mesh(modakBase, mat);
+        
+        const auraMat = new THREE.MeshBasicMaterial({color: color, transparent: true, opacity: 0.3, side: THREE.DoubleSide});
+        const aura = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 16), auraMat);
+        aura.position.y = 1.5;
+        
+        const innerGroup = new THREE.Group();
+        innerGroup.add(top, bottom, aura);
+        innerGroup.position.y = 10;
+        group.add(innerGroup);
     }
     else if (type === 'prosperity_shrine') {
         const mat = new THREE.MeshToonMaterial({color: 0xaa6644, roughness: 0.8});
