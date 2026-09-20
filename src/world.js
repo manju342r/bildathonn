@@ -230,8 +230,12 @@ function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
         bowl.rotation.x = Math.PI; // Flip half-sphere upside down to make a bowl
         bowl.position.y = 1.5;
         const flame = new THREE.Mesh(new THREE.ConeGeometry(1, 3, 8), new THREE.MeshToonMaterial({color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 2}));
+        flame.name = "diya_flame";
+        flame.visible = false;
         flame.position.y = 2.5;
         const diyaLight = new THREE.PointLight(0xffaa00, 1, 30);
+        diyaLight.name = "diya_light";
+        diyaLight.visible = false;
         diyaLight.position.y = 3;
         group.add(base, bowl, flame, diyaLight);
     }

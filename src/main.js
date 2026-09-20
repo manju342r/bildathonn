@@ -510,7 +510,7 @@ function checkInteraction() {
     }
     
     for (let obj of interactables) {
-        if (!obj.visible) continue;
+        if (!obj.visible || obj.interacted) continue;
         let dist = Math.sqrt(Math.pow(pX - obj.x, 2) + Math.pow(pZ - obj.z, 2));
         
         // Increase radius for blessings so they are easy to collect
@@ -608,6 +608,9 @@ function handleObjInteraction(obj) {
             return;
         }
         obj.visible = false; obj.mesh.visible = false;
+        scene.remove(obj.mesh);
+        let idx = interactables.indexOf(obj);
+        if (idx > -1) interactables.splice(idx, 1);
         questData.offeringsFound = (questData.offeringsFound || 0) + 1;
         showToast("Offering Collected! " + questData.offeringsFound + "/5");
         if (questData.offeringsFound >= 5) {
@@ -631,7 +634,12 @@ function handleObjInteraction(obj) {
             showToast("An unlit Diya. It feels cold.");
             return;
         }
-        obj.visible = false; obj.mesh.visible = false; // "Lit" visually later if we had material change
+        // Don't remove the Diya, just light it!
+        let flame = obj.mesh.getObjectByName("diya_flame");
+        let light = obj.mesh.getObjectByName("diya_light");
+        if (flame) flame.visible = true;
+        if (light) light.visible = true;
+        obj.interacted = true;
         questData.diyasLit = (questData.diyasLit || 0) + 1;
         showToast("Sacred Diya Lit! " + questData.diyasLit + "/3");
         if (questData.diyasLit >= 3) {
@@ -649,6 +657,9 @@ function handleObjInteraction(obj) {
     }
     else if (obj.type === 'corruption') {
         obj.visible = false; obj.mesh.visible = false;
+        scene.remove(obj.mesh);
+        let idx = interactables.indexOf(obj);
+        if (idx > -1) interactables.splice(idx, 1);
         questData.corruptionsCleared = (questData.corruptionsCleared || 0) + 1;
         showToast("Corruption Cleared! " + questData.corruptionsCleared + "/4");
         if (questData.corruptionsCleared >= 4) {
@@ -657,6 +668,9 @@ function handleObjInteraction(obj) {
     }
     else if (obj.type === 'blessing') {
         obj.visible = false; obj.mesh.visible = false;
+        scene.remove(obj.mesh);
+        let idx = interactables.indexOf(obj);
+        if (idx > -1) interactables.splice(idx, 1);
         gameState.blessings++;
         updateHUD();
         
