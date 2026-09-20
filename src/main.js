@@ -56,25 +56,26 @@ function triggerBanasuraTaunt(blessingCount) {
     
     createSmokePuff(banasuraMesh.position);
     
-    if (blessingCount < 4) {
-        setTimeout(() => {
-            if (banasuraMesh) banasuraMesh.visible = false;
-            createSmokePuff(banasuraMesh.position);
-            banasuraTaunting = false;
-            
-            // Release cinematic lock
-            uiCinematic.classList.remove('active');
-            isCinematic = false;
-            isPlaying = true;
-        }, 10000);
-    } else {
+    // Handle skipping gracefully so it doesn't break quest state
+    let tauntTimeout = null;
+    const skipBtn = document.getElementById('btn-skip-cinematic');
+    const oldOnClick = skipBtn.onclick;
+    
+    const endTaunt = () => {
+        if (tauntTimeout) clearTimeout(tauntTimeout);
+        if (banasuraMesh) banasuraMesh.visible = false;
+        createSmokePuff(banasuraMesh.position);
         banasuraTaunting = false;
-        setTimeout(() => {
-            uiCinematic.classList.remove('active');
-            isCinematic = false;
-            isPlaying = true;
-        }, 8000);
-    }
+        
+        uiCinematic.classList.remove('active');
+        isCinematic = false;
+        isPlaying = true;
+        
+        skipBtn.onclick = oldOnClick; // Restore original skip button behavior
+    };
+    
+    skipBtn.onclick = endTaunt;
+    tauntTimeout = setTimeout(endTaunt, 9000);
 }
 
 function createSmokePuff(pos) {
@@ -1598,64 +1599,7 @@ function startFinalVighnaEvent() {
     questData.corruptionsCleared = 0;
 }
 
-function triggerBanasuraTaunt(blessingCount) {
-    isPaused = true;
-    uiHud.classList.remove('active');
-    
-    const taunts = [
-        "YOU CLAIM ONE BLESSING, BUT MY DARKNESS IS ETERNAL!",
-        "FOOL! THE MORE YOU GATHER, THE CLOSER YOU COME TO YOUR DOOM!",
-        "GANESHA CANNOT SAVE YOU NOW. SURRENDER TO BANASURA!",
-        "NO! THE FINAL BLESSING... I WILL CRUSH YOU MYSELF!"
-    ];
-    
-    // Environment changes
-    if (scene && scene.background) scene.background.setHex(0x330000); // Deep red
-    if (scene && scene.fog) {
-        scene.fog.color.setHex(0x330000);
-        scene.fog.density = 0.004; // Thicker fog
-    }
-    
-    // Screen shake
-    document.getElementById('game-container').classList.add('shake');
-    
-    // Show cinematic
-    const cinematic = document.getElementById('cinematic-screen');
-    const textEl = document.getElementById('cinematic-text');
-    cinematic.classList.add('active');
-    cinematic.style.background = "rgba(100, 0, 0, 0.7)"; 
-    
-    textEl.innerText = "BANASURA: \"" + taunts[Math.min(blessingCount - 1, 3)] + "\"";
-    textEl.style.color = "#ff3333";
-    textEl.style.fontSize = "40px";
-    
-    const skipBtn = document.getElementById('btn-skip-cinematic');
-    skipBtn.innerText = "BRACE YOURSELF";
-    
-    // Temporarily overwrite the skip behavior for this taunt
-    const oldOnClick = skipBtn.onclick;
-    skipBtn.onclick = () => {
-        cinematic.classList.remove('active');
-        cinematic.style.background = "rgba(0,0,0,0.3)";
-        textEl.style.color = "#fff";
-        textEl.style.fontSize = "";
-        skipBtn.innerText = "SKIP";
-        
-        // Restore environment
-        if (scene && scene.background) scene.background.setHex(0x0a0a1a);
-        if (scene && scene.fog) {
-            scene.fog.color.setHex(0x0a0a1a);
-            scene.fog.density = 0.0015;
-        }
-        document.getElementById('game-container').classList.remove('shake');
-        
-        uiHud.classList.add('active');
-        isPaused = false;
-        
-        // Restore old behavior for cinematic skip
-        skipBtn.onclick = oldOnClick;
-    };
-}
+
 
 function playEndingCinematic() {
     isCinematic = true;
