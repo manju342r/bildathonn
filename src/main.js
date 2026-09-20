@@ -392,24 +392,21 @@ const notifyEl = document.getElementById('notification');
 
 let cinematicTimeout = null;
 let dioramaGroup = null;
+let meteorMesh = null;
+let introCameraShake = 0;
 
 function startCinematic() {
     uiMainMenu.classList.remove('active');
     uiCinematic.classList.add('active');
     cinematicIndex = 0;
+    introCameraShake = 0;
     
     // Position Characters for Intro
     player.position.set(0, 0, 10);
     
-    // Create Guide Arrow (Literal Arrow Shape)
+    // Create Guide Arrow
     arrowContainer = new THREE.Group();
-    // Huge glowing cyan diamond
-    const arrowMat = new THREE.MeshToonMaterial({
-        color: 0x00ffff, 
-        emissive: 0x00aaaa, 
-        roughness: 0.2
-    });
-    
+    const arrowMat = new THREE.MeshToonMaterial({color: 0x00ffff, emissive: 0x00aaaa, roughness: 0.2});
     const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), arrowMat);
     diamond.scale.set(1, 1.5, 1);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(5, 0.5, 8, 16), arrowMat);
@@ -422,24 +419,50 @@ function startCinematic() {
     isCinematic = true;
     isPlaying = false; // Lock controls
     
-    // Build Diorama at Z=2000 for the opening shot
+    // Build Diorama at Z=2000
     if (!dioramaGroup) {
         dioramaGroup = new THREE.Group();
         dioramaGroup.position.set(0, 0, 2000);
-        const dFloor = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshBasicMaterial({color: 0x88cc88}));
+        
+        // Base platform
+        const dFloor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({color: 0x445544}));
         dFloor.rotation.x = -Math.PI/2;
         dioramaGroup.add(dFloor);
-        for(let i=0; i<15; i++) {
-            let h = 10 + Math.random()*30;
-            let b = new THREE.Mesh(new THREE.BoxGeometry(10, h, 10), new THREE.MeshBasicMaterial({color: 0xdddddd}));
-            b.position.set((Math.random()-0.5)*150, h/2, (Math.random()-0.5)*150);
+        
+        // City buildings (better aesthetics)
+        const buildingMat = new THREE.MeshToonMaterial({color: 0xe0e0e0});
+        for(let i=0; i<25; i++) {
+            let h = 15 + Math.random()*40;
+            let w = 10 + Math.random()*15;
+            let b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), buildingMat);
+            b.position.set((Math.random()-0.5)*200, h/2, (Math.random()-0.5)*200);
+            
+            // Randomly rotate some buildings
+            b.rotation.y = (Math.random() > 0.5) ? Math.PI/4 : 0;
             dioramaGroup.add(b);
         }
+        
         scene.add(dioramaGroup);
+    } else {
+        dioramaGroup.visible = true;
+        // Reset colors
+        dioramaGroup.children.forEach(c => {
+            if (c.geometry.type === 'BoxGeometry') c.material.color.setHex(0xe0e0e0);
+        });
     }
+
+    if (!meteorMesh) {
+        meteorMesh = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(12, 1),
+            new THREE.MeshBasicMaterial({color: 0xffaa00})
+        );
+        scene.add(meteorMesh);
+    }
+    meteorMesh.visible = false;
     
-    // Initial Camera
-    camera.position.set(0, 50, 2150);
+    if (banasuraMesh) banasuraMesh.visible = false;
+    
+    camera.position.set(0, 80, 2200);
     camera.lookAt(0, 0, 2000);
     
     nextCinematicText();
@@ -448,41 +471,51 @@ function startCinematic() {
 function nextCinematicText() {
     if (cinematicIndex === 0) {
         cinematicText.innerText = "The cities had fallen one by one...";
-        camera.position.set(50, 60, 2150);
+        // Smooth camera pan setup
+        camera.position.set(80, 70, 2250);
         camera.lookAt(0, 0, 2000);
+        
     } else if (cinematicIndex === 1) {
         cinematicText.innerText = "The destroyer had arrived.";
-        // Corrupt diorama
-        dioramaGroup.children.forEach(c => {
-            if (c.geometry.type === 'BoxGeometry') c.material.color.setHex(0x330000);
-        });
+        
+        // Trigger Asteroid Fall
+        meteorMesh.position.set(20, 400, 1950);
+        meteorMesh.visible = true;
+        
         if (banasuraMesh) {
             banasuraMesh.visible = true;
-            banasuraMesh.position.set(0, 20, 2050);
-            banasuraMesh.lookAt(0,0,2000);
+            banasuraMesh.position.set(0, 20, 2080);
+            banasuraMesh.lookAt(0, 0, 2000);
         }
+        
+        camera.position.set(0, 60, 2150);
+        camera.lookAt(0, 10, 2000);
+        
     } else if (cinematicIndex === 2) {
         cinematicText.innerText = "The final sacred temple still stood.";
+        introCameraShake = 0;
         if (banasuraMesh) banasuraMesh.visible = false;
-        if (dioramaGroup) {
-            dioramaGroup.visible = false;
-        }
+        if (dioramaGroup) dioramaGroup.visible = false;
+        if (meteorMesh) meteorMesh.visible = false;
+        
         // Jump to Shrine
-        camera.position.set(0, 150, 250);
+        camera.position.set(0, 120, 200);
         camera.lookAt(0, 20, 0);
+        
     } else if (cinematicIndex === 3) {
         cinematicText.innerText = "Banasura approaches the Sacred Shrine...";
-        camera.position.set(100, 80, 100);
+        camera.position.set(80, 60, 80);
         camera.lookAt(0, 20, 0);
+        
     } else if (cinematicIndex === 4) {
         cinematicText.innerText = "Mooshak must recover the Four Lost Blessings!";
-        camera.position.set(40, 40, 60);
-        camera.lookAt(0, 0, -20);
+        camera.position.set(40, 30, 60);
+        camera.lookAt(0, 10, -10);
     }
 
     cinematicIndex++;
     if (cinematicIndex <= 5) {
-        cinematicTimeout = setTimeout(nextCinematicText, 4500);
+        cinematicTimeout = setTimeout(nextCinematicText, 5000);
     } else {
         endCinematic();
     }
@@ -1372,6 +1405,35 @@ function animate() {
         
         updateMinimap();
     }
+
+    // Intro Cinematic Asteroid Animation
+    if (isCinematic && cinematicIndex === 2 && typeof meteorMesh !== 'undefined' && meteorMesh && meteorMesh.visible) {
+        meteorMesh.position.y -= 250 * delta; // Faster fall
+        meteorMesh.rotation.x += 10 * delta;
+        
+        // Impact!
+        if (meteorMesh.position.y <= 10) {
+            meteorMesh.visible = false;
+            introCameraShake = 20; // Start shaking
+            
+            // Turn city corrupted red and ground dark
+            if (typeof dioramaGroup !== 'undefined' && dioramaGroup) {
+                dioramaGroup.children.forEach(c => {
+                    if (c.geometry && c.geometry.type === 'BoxGeometry') c.material.color.setHex(0x550000);
+                    if (c.geometry && c.geometry.type === 'PlaneGeometry') c.material.color.setHex(0x221111);
+                });
+            }
+            createSmokePuff(new THREE.Vector3(20, 10, 1950), 20); // Big explosion
+        }
+    }
+    
+    // Apply Camera Shake
+    if (typeof introCameraShake !== 'undefined' && introCameraShake > 0) {
+        camera.position.x += (Math.random() - 0.5) * 5;
+        camera.position.y += (Math.random() - 0.5) * 5;
+        introCameraShake -= delta * 15;
+    }
+
     renderer.render(scene, camera);
 }
 
