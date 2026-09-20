@@ -356,6 +356,15 @@ window.addEventListener('keydown', (e) => {
     if (keys.hasOwnProperty(k)) keys[k] = true;
     if (k === 'e' && isPlaying && !isPaused) checkInteraction();
     
+    // Camera Toggle
+    if (k === 'c' && isPlaying) {
+        cameraMode = (cameraMode + 1) % 3;
+        window.camOrbitAngle = player.rotation.y; // reset orbit
+        if (cameraMode === 0) showToast("Camera: Classic Isometric");
+        if (cameraMode === 1) showToast("Camera: Action Follow");
+        if (cameraMode === 2) showToast("Camera: Top-Down Overview");
+    }
+    
     // Heal with Modak
     if (k === 'm' && isPlaying && !isPaused) {
         if (gameState.modaks > 0) {
@@ -1259,9 +1268,37 @@ function animate() {
 
         // GANAPATI IS STATIONARY. No companion follow logic.
         
+        // Dynamic Action Camera Follow (Mode 1)
+        if (cameraMode === 1 && isPlaying) {
+            let dist = 45;
+            let height = 25;
+            let currentAngle = player.rotation.y;
+            
+            if (typeof window.camOrbitAngle === 'undefined') window.camOrbitAngle = currentAngle;
+            
+            // Shortest path angle lerp
+            let diff = currentAngle - window.camOrbitAngle;
+            while(diff < -Math.PI) diff += Math.PI*2;
+            while(diff > Math.PI) diff -= Math.PI*2;
+            
+            window.camOrbitAngle += diff * 3 * delta; // Orbit speed
+            
+            let backX = -Math.sin(window.camOrbitAngle) * dist;
+            let backZ = -Math.cos(window.camOrbitAngle) * dist;
+            
+            camOffset.set(backX, height, backZ);
+        }
+
         // Always lerp camera for smooth cinematic feel!
-        camera.position.lerp(new THREE.Vector3(player.position.x + camOffset.x, player.position.y + camOffset.y, player.position.z + camOffset.z), 0.1);
-        camera.lookAt(player.position);
+        let targetCamPos = new THREE.Vector3(player.position.x + camOffset.x, player.position.y + camOffset.y, player.position.z + camOffset.z);
+        camera.position.lerp(targetCamPos, 8 * delta);
+        
+        // In Mode 1, look slightly ahead of the player rather than looking down at their feet
+        if (cameraMode === 1 && isPlaying) {
+            camera.lookAt(player.position.x, player.position.y + 10, player.position.z);
+        } else {
+            camera.lookAt(player.position);
+        }
         
         // Move and Check Traps dynamically
         const timeNow = Date.now() * 0.002;
