@@ -348,12 +348,12 @@ function createWorld(scene) {
     
     // City Puzzle (Prosperity) - PARKOUR CHALLENGE
     addPlatform(scene, 250, 15, 0, 40, 40);
-    addPlatform(scene, 320, 25, 0, 30, 30);
-    addPlatform(scene, 320, 35, -70, 30, 30);
-    addPlatform(scene, 390, 45, -70, 30, 30);
-    addPlatform(scene, 460, 55, -70, 25, 25);
-    addPlatform(scene, 460, 65, 0, 25, 25);
-    addPlatform(scene, 550, 75, 0, 40, 40); // Final Platform
+    addPlatform(scene, 320, 25, 0, 40, 40);
+    addPlatform(scene, 320, 35, -70, 40, 40);
+    addPlatform(scene, 390, 45, -70, 40, 40);
+    addPlatform(scene, 460, 55, -70, 40, 40);
+    addPlatform(scene, 460, 65, 0, 40, 40);
+    addPlatform(scene, 550, 75, 0, 50, 50); // Final Platform
     
     // 5 Collectible offerings on the platforms
     createInteractable(scene, 'offering0', 'offering', 320, 0, 0xffffff, 'sphere', 28);
@@ -362,9 +362,9 @@ function createWorld(scene) {
     createInteractable(scene, 'offering3', 'offering', 460, -70, 0xffffff, 'sphere', 58);
     createInteractable(scene, 'offering4', 'offering', 460, 0, 0xffffff, 'sphere', 68);
     
-    // Traps on platforms
-    createInteractable(scene, 'trap_p1', 'corruption_trap', 320, 0, 0xff0000, 'box', 25);
-    createInteractable(scene, 'trap_p2', 'corruption_trap', 390, -70, 0xff0000, 'box', 45);
+    // Traps on platforms (Removed because they covered the whole platform causing instant death)
+    // createInteractable(scene, 'trap_p1', 'corruption_trap', 320, 0, 0xff0000, 'box', 25);
+    // createInteractable(scene, 'trap_p2', 'corruption_trap', 390, -70, 0xff0000, 'box', 45);
     
     let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, 0, 0x00ff00, 'octahedron', 85);
     b2.mesh.visible = false; b2.visible = false;
