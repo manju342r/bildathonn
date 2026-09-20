@@ -27,6 +27,7 @@ function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
     let wallObj = {
         minX: x - w/2, maxX: x + w/2,
         minZ: z - d/2, maxZ: z + d/2,
+        height: h,
         mesh: mesh,
         isActive: true
     };
@@ -423,8 +424,10 @@ function createWorld(scene) {
 }
 
 function checkCollision(newX, newZ, radius) {
+    let py = (typeof player !== 'undefined') ? player.position.y : 0;
     for (let wall of walls) {
         if (!wall.isActive) continue;
+        if (wall.height && py >= wall.height - 2) continue; // Player is standing on or above the wall
         if (newX > wall.minX - radius && newX < wall.maxX + radius &&
             newZ > wall.minZ - radius && newZ < wall.maxZ + radius) {
             return true;

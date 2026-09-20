@@ -919,6 +919,17 @@ function animate() {
             }
         }
         
+        if (typeof walls !== 'undefined') {
+            for (let w of walls) {
+                if (player.position.x >= w.minX && player.position.x <= w.maxX &&
+                    player.position.z >= w.minZ && player.position.z <= w.maxZ) {
+                    if (w.height && player.position.y >= w.height - 2) {
+                        groundY = Math.max(groundY, w.height);
+                    }
+                }
+            }
+        }
+        
         // Jump & Gravity Physics
         if (typeof window.playerVelocityY === 'undefined') window.playerVelocityY = 0;
         
