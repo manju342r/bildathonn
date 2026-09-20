@@ -127,6 +127,8 @@ let questData = {
 let currentZone = "HUB";
 
 let isPlaying = false;
+let cameraMode = 0; // 0: Classic, 1: Action, 2: Top-Down
+let cameraMode = 0; // 0: Classic, 1: Action, 2: Top-Down
 let isCinematic = false;
 let isPaused = false;
 let inRunnerMode = false;
@@ -1037,7 +1039,11 @@ function animate() {
             }
         } else {
             inRunnerMode = false;
-            camOffset.set(0, 60, 80);
+            
+            if (cameraMode === 0) camOffset.set(0, 60, 60);
+            if (cameraMode === 1) camOffset.set(0, 30, 40);
+            if (cameraMode === 2) camOffset.set(0, 120, 15);
+
         }
         
         let dx = 0; let dz = 0;
@@ -1176,12 +1182,8 @@ function animate() {
 
         // GANAPATI IS STATIONARY. No companion follow logic.
         
-        if (inRunnerMode) camera.position.lerp(new THREE.Vector3(player.position.x + camOffset.x, player.position.y + camOffset.y, player.position.z + camOffset.z), 0.1);
-        else {
-            camera.position.x = player.position.x + camOffset.x;
-            camera.position.y = player.position.y + camOffset.y;
-            camera.position.z = player.position.z + camOffset.z;
-        }
+        // Always lerp camera for smooth cinematic feel!
+        camera.position.lerp(new THREE.Vector3(player.position.x + camOffset.x, player.position.y + camOffset.y, player.position.z + camOffset.z), 0.1);
         camera.lookAt(player.position);
         
         // Move and Check Traps dynamically
