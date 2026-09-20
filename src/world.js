@@ -35,6 +35,48 @@ function addWall(scene, x, z, w, d, color = 0x5c3a21, h = 20) {
     return wallObj;
 }
 
+
+function createDesertHazard(scene, type, x, z) {
+    if (type === 'cactus') {
+        const geo = new THREE.CylinderGeometry(4, 4, 25);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, 12.5, z);
+        scene.add(mesh);
+        hazards.push({ mesh: mesh, type: 'cactus', x: x, z: z, radius: 8 });
+        
+        const armGeo = new THREE.CylinderGeometry(2.5, 2.5, 10);
+        const arm1 = new THREE.Mesh(armGeo, mat);
+        arm1.rotation.z = Math.PI / 4;
+        arm1.position.set(5, 5, 0);
+        mesh.add(arm1);
+    } else if (type === 'thorn') {
+        const geo = new THREE.ConeGeometry(8, 10, 4);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, 5, z);
+        scene.add(mesh);
+        hazards.push({ mesh: mesh, type: 'thorn', x: x, z: z, radius: 8 });
+    } else if (type === 'thorn_pit') {
+        const holeGeo = new THREE.CircleGeometry(15, 16);
+        const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+        holeMesh.rotation.x = -Math.PI / 2;
+        holeMesh.position.set(x, 0.1, z);
+        scene.add(holeMesh);
+        
+        const geo = new THREE.ConeGeometry(4, 10, 4);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+        for(let i=0; i<4; i++) {
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set((Math.random()-0.5)*15, 2, (Math.random()-0.5)*15);
+            holeMesh.add(mesh);
+        }
+        
+        hazards.push({ mesh: holeMesh, type: 'thorn_pit', x: x, z: z, radius: 12 });
+    }
+}
+
 function createInteractable(scene, id, type, x, z, color, geoType, y = 0) {
     const group = new THREE.Group();
     group.position.set(x, y, z);
@@ -314,26 +356,41 @@ function createWorld(scene) {
     knowledgeShrineObj.mesh.position.y = 4;
 
 
+    
     // ==========================================
-    // NORTH: ANCIENT GROVE (0, -400)
+    // NORTH: DESERT RUINS (0, -400)
     // ==========================================
-    for(let i=0; i<60; i++) {
-        let tx = (Math.random() - 0.5) * 600;
-        let tz = -200 - Math.random() * 500;
-        if (Math.abs(tx) < 40 && tz > -300) continue; // Keep main path clear
-        createTree(scene, tx, tz);
+    // Scattered ruins (Desert feel)
+    for(let i=0; i<30; i++) {
+        let bx = (Math.random() - 0.5) * 500;
+        let bz = -200 - Math.random() * 500;
+        let safe = true;
+        if (Math.abs(bx) < 40 && bz > -300) safe = false; // Keep main path clear
+        for (let obj of interactables) {
+            if (Math.abs(bx - obj.x) < 40 && Math.abs(bz - obj.z) < 40) { safe = false; break; }
+        }
+        if (safe) addWall(scene, bx, bz, 20 + Math.random()*20, 20 + Math.random()*20, 0xcc9966, 10 + Math.random()*15);
     }
     
-    // Grove Puzzle (Wisdom)
-    // Spread symbols far apart
-    createInteractable(scene, 'sym1', 'symbol', -150, -250, 0x4444ff, 'box');
-    createInteractable(scene, 'sym2', 'symbol', 200, -350, 0x4444ff, 'box');
-    createInteractable(scene, 'sym3', 'symbol', -50, -550, 0x4444ff, 'box');
+    // Hidden Shrine in North
+    createInteractable(scene, 'hidden_shrine', 'hidden_shrine', 0, -600, 0xddaa77, 'box');
     
-    let b1 = createInteractable(scene, 'blessing_wisdom', 'blessing', 0, -400, 0x00ff00, 'octahedron');
-    b1.mesh.visible = false; b1.visible = false;
+    // Diyas (Unlit lamps) scattered in North
+    createInteractable(scene, 'diya1', 'diya', -150, -500, 0x555555, 'cylinder');
+    createInteractable(scene, 'diya2', 'diya', 150, -550, 0x555555, 'cylinder');
+    createInteractable(scene, 'diya3', 'diya', 0, -450, 0x555555, 'cylinder');
+    
+    let b3 = createInteractable(scene, 'blessing_devotion', 'blessing', 0, -560, 0x00ff00, 'octahedron');
+    b3.mesh.visible = false; b3.visible = false;
 
-    // ==========================================
+    // Desert Hazards (Cacti, Thorns, Pits)
+    for(let i=0; i<8; i++) {
+        createDesertHazard(scene, 'cactus', (Math.random()-0.5)*400, -250 - Math.random()*300);
+        createDesertHazard(scene, 'thorn', (Math.random()-0.5)*300, -250 - Math.random()*300);
+        createDesertHazard(scene, 'thorn_pit', (Math.random()-0.5)*300, -250 - Math.random()*300);
+    }
+
+// ==========================================
     // EAST: FESTIVAL CITY (400, 0)
     // ==========================================
     // Scattered buildings
@@ -370,46 +427,38 @@ function createWorld(scene) {
     let b2 = createInteractable(scene, 'blessing_prosperity', 'blessing', 550, 0, 0x00ff00, 'octahedron', 85);
     b2.mesh.visible = false; b2.visible = false;
 
+    
     // ==========================================
-    // SOUTH: DESERT (0, 400)
+    // SOUTH: ANCIENT GROVE (0, 400)
     // ==========================================
-    // Scattered ruins (Desert feel)
-    for(let i=0; i<30; i++) {
-        let bx = (Math.random() - 0.5) * 500;
-        let bz = 200 + Math.random() * 500;
-        let safe = true;
-        for (let obj of interactables) {
-            if (Math.abs(bx - obj.x) < 40 && Math.abs(bz - obj.z) < 40) { safe = false; break; }
-        }
-        if (safe) addWall(scene, bx, bz, 20 + Math.random()*20, 20 + Math.random()*20, 0xcc9966, 10 + Math.random()*15);
+    for(let i=0; i<60; i++) {
+        let tx = (Math.random() - 0.5) * 600;
+        let tz = 200 + Math.random() * 500;
+        if (Math.abs(tx) < 40 && tz < 300) continue; // Keep main path clear
+        createTree(scene, tx, tz);
     }
     
-    // Hidden Shrine
-    createInteractable(scene, 'hidden_shrine', 'hidden_shrine', 0, 600, 0xddaa77, 'box');
+    // Grove Puzzle (Wisdom)
+    // Spread symbols far apart
+    createInteractable(scene, 'sym1', 'symbol', -150, 250, 0x4444ff, 'box');
+    createInteractable(scene, 'sym2', 'symbol', 200, 350, 0x4444ff, 'box');
+    createInteractable(scene, 'sym3', 'symbol', -50, 550, 0x4444ff, 'box');
     
-    // Diyas (Unlit lamps)
-    createInteractable(scene, 'diya1', 'diya', -150, 500, 0x555555, 'cylinder');
-    createInteractable(scene, 'diya2', 'diya', 150, 550, 0x555555, 'cylinder');
-    createInteractable(scene, 'diya3', 'diya', 0, 450, 0x555555, 'cylinder');
-    
-    let b3 = createInteractable(scene, 'blessing_devotion', 'blessing', 0, 560, 0x00ff00, 'octahedron');
-    b3.mesh.visible = false; b3.visible = false;
+    let b1 = createInteractable(scene, 'blessing_wisdom', 'blessing', 0, 400, 0x00ff00, 'octahedron');
+    b1.mesh.visible = false; b1.visible = false;
 
-    // --- CORRUPTION TRAPS (INCREASE DIFFICULTY BEFORE BOULDERS) ---
-    // North traps
-    createInteractable(scene, 'trap_n1', 'corruption_trap', -50, -300, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n2', 'corruption_trap', 80, -450, 0xff0000, 'box');
-    createInteractable(scene, 'trap_n3', 'corruption_trap', -100, -500, 0xff0000, 'box');
+
+    // --- CORRUPTION TRAPS ---
     // East traps
     createInteractable(scene, 'trap_e1', 'corruption_trap', 300, 50, 0xff0000, 'box');
     createInteractable(scene, 'trap_e2', 'corruption_trap', 450, -100, 0xff0000, 'box');
     createInteractable(scene, 'trap_e3', 'corruption_trap', 550, 150, 0xff0000, 'box');
-    // South traps
+    // South traps (Fast circular sweeping traps moved to Ancient Grove)
     createInteractable(scene, 'trap_s1', 'corruption_trap', -80, 350, 0xff0000, 'box');
     createInteractable(scene, 'trap_s2', 'corruption_trap', 120, 450, 0xff0000, 'box');
     createInteractable(scene, 'trap_s3', 'corruption_trap', 0, 520, 0xff0000, 'box');
 
-    // ==========================================
+// ==========================================
     // WEST: MOUNTAIN (COURAGE) (-400, 0)
     // ==========================================
     // Giant Mountain Walls forming a canyon

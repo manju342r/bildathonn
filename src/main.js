@@ -506,9 +506,9 @@ function handleGaneshaInteraction() {
         setTimeout(() => showToast("A divine echo fills your mind: 'Mooshak, my faithful vahana...'"), 3000);
         setTimeout(() => showToast("Echo: 'Banasura has banished me. Gather the blessings to summon me back!'"), 6000);
         setTimeout(() => {
-            showToast("Echo: 'You are small, but courage matters. Head NORTH to the Ancient Grove first.'");
-            gameState.stage = 'NORTH_WISDOM';
-            setObjective("Find the three Stone Symbols in the North.");
+            showToast("Echo: 'You are small, but devotion matters. Head NORTH to the Desert Ruins first.'");
+            gameState.stage = 'NORTH_DEVOTION';
+            setObjective("Find the Forgotten Shrine and 3 Unlit Diyas in the North.");
         }, 9000);
     } else if (gameState.stage === 'RETURN_CENTER') {
         showToast("The four blessings resonate, emitting a blinding light from the statue!");
@@ -534,7 +534,7 @@ function handleObjInteraction(obj) {
         document.getElementById('quiz-question-container').style.display = 'none';
     } 
     else if (obj.type === 'symbol') {
-        if (gameState.stage !== 'NORTH_WISDOM') {
+        if (gameState.stage !== 'SOUTH_WISDOM') {
             showToast("The ancient symbols are dormant.");
             return;
         }
@@ -591,8 +591,8 @@ function handleObjInteraction(obj) {
         }
     }
     else if (obj.type === 'diya') {
-        if (gameState.stage !== 'SOUTH_DEVOTION') {
-            showToast("An unlit Diya.");
+        if (gameState.stage !== 'NORTH_DEVOTION') {
+            showToast("An unlit Diya. It feels cold.");
             return;
         }
         obj.visible = false; obj.mesh.visible = false; // "Lit" visually later if we had material change
@@ -606,8 +606,8 @@ function handleObjInteraction(obj) {
         }
     }
     else if (obj.type === 'hidden_shrine') {
-        if (gameState.stage === 'SOUTH_DEVOTION' && !questData.diyasLit) {
-            setObjective("Light the 3 Sacred Diyas in the desert.");
+        if (gameState.stage === 'NORTH_DEVOTION' && !questData.diyasLit) {
+            setObjective("Light the 3 Sacred Diyas in the ruins.");
             showToast("The Shrine is dormant. Light the 3 nearby Diyas.");
         }
     }
@@ -627,18 +627,18 @@ function handleObjInteraction(obj) {
         // Taunt from Banasura!
         triggerBanasuraTaunt(gameState.blessings);
         
-        if (obj.id === 'blessing_wisdom') {
-            showToast("BLESSING OF WISDOM OBTAINED\nThe path to the East is open!");
+        if (obj.id === 'blessing_devotion') {
+            showToast("BLESSING OF DEVOTION OBTAINED\nThe path to the East is open!");
             gameState.stage = 'EAST_PROSPERITY';
             setObjective("Climb the platforms and collect all 5 offerings in the East.");
         }
         else if (obj.id === 'blessing_prosperity') {
             showToast("BLESSING OF PROSPERITY OBTAINED\nThe Southern winds clear the path!");
-            gameState.stage = 'SOUTH_DEVOTION';
-            setObjective("Find the Forgotten Shrine in the Southern Desert.");
+            gameState.stage = 'SOUTH_WISDOM';
+            setObjective("Find the three Stone Symbols in the Southern Grove.");
         }
-        else if (obj.id === 'blessing_devotion') {
-            showToast("BLESSING OF DEVOTION OBTAINED\nThe treacherous Western path reveals itself!");
+        else if (obj.id === 'blessing_wisdom') {
+            showToast("BLESSING OF WISDOM OBTAINED\nThe treacherous Western path reveals itself!");
             gameState.stage = 'WEST_COURAGE';
             setObjective("Navigate the Mountain canyon in the West.");
         }
@@ -758,7 +758,7 @@ function animate() {
     if (gameState.stage === 'FINAL_VIGHNA' || (isCinematic && cinematicIndex > 4 && cinematicIndex < 10)) {
         targetSkyColor.setHex(0x220000); // Vighna Red
         targetSunIntensity = 0.2;
-    } else if (gameState.stage === 'SOUTH_DEVOTION') {
+    } else if (gameState.stage === 'NORTH_DEVOTION') {
         targetSkyColor.setHex(0xff7744); // Sunset for the Desert/Diyas
         targetSunIntensity = 0.8;
     } else if (gameState.stage === 'WEST_COURAGE' || gameState.stage === 'RETURN_CENTER') {
@@ -953,12 +953,15 @@ function animate() {
             
             let target = null;
             if (gameState.stage === 'START' || gameState.stage === 'TALK_TO_GANESHA') target = ganesha ? ganesha.position : {x:0, z:0};
-            else if (gameState.stage === 'NORTH_WISDOM') {
-                let sHit = questData.symbolsHit || 0;
-                if (sHit === 0) target = {x: -150, z: -250};
-                else if (sHit === 1) target = {x: 200, z: -350};
-                else if (sHit === 2) target = {x: -50, z: -550};
-                else target = {x: 0, z: -400};
+            else if (gameState.stage === 'NORTH_DEVOTION') {
+                if ((questData.diyasLit || 0) < 3) {
+                    for (let i=1; i<=3; i++) {
+                        let diya = interactables.find(obj => obj.id === 'diya'+i);
+                        if (diya && diya.visible) { target = diya; break; }
+                    }
+                } else {
+                    target = {x: 0, z: -600}; // Hidden Shrine in North
+                }
             }
             else if (gameState.stage === 'EAST_PROSPERITY') {
                 if ((questData.offeringsFound || 0) < 5) {
@@ -970,15 +973,12 @@ function animate() {
                     target = interactables.find(obj => obj.id === 'blessing_prosperity') || {x: 550, z: 0};
                 }
             }
-            else if (gameState.stage === 'SOUTH_DEVOTION') {
-                if ((questData.diyasLit || 0) < 3) {
-                    for (let i=1; i<=3; i++) {
-                        let diya = interactables.find(obj => obj.id === 'diya'+i);
-                        if (diya && diya.visible) { target = diya; break; }
-                    }
-                } else {
-                    target = {x: 0, z: 600}; // Blessing of devotion
-                }
+            else if (gameState.stage === 'SOUTH_WISDOM') {
+                let sHit = questData.symbolsHit || 0;
+                if (sHit === 0) target = {x: -150, z: 250};
+                else if (sHit === 1) target = {x: 200, z: 350};
+                else if (sHit === 2) target = {x: -50, z: 550};
+                else target = {x: 0, z: 400}; // Shrine in South
             }
             else if (gameState.stage === 'WEST_COURAGE') {
                 target = {x: -800, z: 0}; // End of the canyon
@@ -1063,6 +1063,35 @@ function animate() {
                 canInteract = true; 
             }
         }
+        
+        // Check static hazards (Cacti, Thorns, Pits)
+        if (typeof hazards !== 'undefined') {
+            for (let hazard of hazards) {
+                let hDist = Math.sqrt(Math.pow(player.position.x - hazard.mesh.position.x, 2) + Math.pow(player.position.z - hazard.mesh.position.z, 2));
+                let hyDist = Math.abs(player.position.y - hazard.mesh.position.y);
+                if (hDist < hazard.radius && hyDist < 20) { // Hit hazard
+                    if (!hazard.cooldown || Date.now() - hazard.cooldown > 1000) {
+                        hazard.cooldown = Date.now();
+                        gameState.health--;
+                        updateHUD();
+                        let msg = "Pricked by Thorns!";
+                        if (hazard.type === 'cactus') msg = "Spiked by a Cactus!";
+                        if (hazard.type === 'thorn_pit') msg = "Fell into a Thorn Pit!";
+                        showToast("Ouch! " + msg + " Health: " + gameState.health);
+                        
+                        // Bounce back slightly
+                        player.position.x += (player.position.x - hazard.mesh.position.x) * 1.5;
+                        player.position.z += (player.position.z - hazard.mesh.position.z) * 1.5;
+                        
+                        if (gameState.health <= 0) {
+                            showToast("YOU PERISHED! Restarting...");
+                            setTimeout(revivePlayer, 2000);
+                        }
+                    }
+                }
+            }
+        }
+
         document.getElementById('interaction-prompt').style.display = canInteract ? 'block' : 'none';
         
         updateMinimap();
