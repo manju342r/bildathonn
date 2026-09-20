@@ -1150,11 +1150,14 @@ function animate() {
                 let speed = GAME_CONFIG.playerSpeed * delta;
                 let moveX = Math.sin(player.rotation.y) * moveSpeed;
                 let moveZ = Math.cos(player.rotation.y) * moveSpeed;
+                dx = moveX; dz = moveZ; // Triggers run animation
                 
                 const newX = player.position.x + moveX * speed;
                 const newZ = player.position.z + moveZ * speed;
                 if (!checkCollision(newX, player.position.z, 6)) player.position.x = newX;
                 if (!checkCollision(player.position.x, newZ, 6)) player.position.z = newZ;
+            } else if (turnSpeed !== 0) {
+                dx = turnSpeed; // Triggers animation while turning in place
             }
         } else {
             if (inRunnerMode) {
