@@ -101,7 +101,7 @@ function createDesertHazard(scene, type, x, z) {
         const holeMat = new THREE.MeshBasicMaterial({ color: 0x110500 });
         const holeMesh = new THREE.Mesh(holeGeo, holeMat);
         holeMesh.rotation.x = -Math.PI / 2;
-        holeMesh.position.y = 0.1;
+        holeMesh.position.y = 0.8; // Lifted higher to prevent z-fighting with dunes/sand
         group.add(holeMesh);
         
         // Thorns inside (pointing up, ready to snap)
