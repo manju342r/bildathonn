@@ -2,6 +2,7 @@
 let gameState = {
     health: 3,
     keys: 0,
+    modaks: 0,
     blessings: 0,
     checkpoint: { x: 0, z: 0 }
 };
@@ -192,6 +193,22 @@ window.addEventListener('keydown', (e) => {
     if (keys.hasOwnProperty(k)) keys[k] = true;
     if (k === 'e' && isPlaying && !isPaused) checkInteraction();
     
+    // Heal with Modak
+    if (k === 'm' && isPlaying && !isPaused) {
+        if (gameState.modaks > 0) {
+            if (gameState.health < 3) {
+                gameState.modaks--;
+                gameState.health++;
+                updateHUD();
+                showToast("Ate a Modak! Restored 1 Health.");
+            } else {
+                showToast("Health is already full.");
+            }
+        } else {
+            showToast("No Modaks left! Visit the Knowledge Shrine.");
+        }
+    }
+    
     // Live Scale Tuning for Ganesha (Press + or -)
     if (e.key === '=' || e.key === '+') {
         if (typeof modelCache !== 'undefined' && modelCache['ganesha']) {
@@ -354,6 +371,7 @@ function setQuest(title, desc) {
 function updateHUD() {
     document.getElementById('val-health').innerText = gameState.health;
     document.getElementById('val-keys').innerText = gameState.keys;
+    if (document.getElementById('val-modaks')) document.getElementById('val-modaks').innerText = gameState.modaks;
     document.getElementById('val-blessings').innerText = gameState.blessings;
     
     if (gameState.health <= 0) {
@@ -629,32 +647,56 @@ function handleObjInteraction(obj) {
     }
 }
 
-// Quiz
+let activeQuizQuestions = [];
+
 function startQuiz() {
     document.getElementById('quiz-start-buttons').style.display = 'none';
     document.getElementById('quiz-question-container').style.display = 'block';
+    
+    // Pick 3 random questions from the 20 available
+    let shuffled = QUIZ_DATA.questions.slice().sort(() => 0.5 - Math.random());
+    activeQuizQuestions = shuffled.slice(0, 3);
+    
     currentQuestion = 0;
     showQuestion();
 }
 
 function showQuestion() {
-    if (currentQuestion >= QUIZ_DATA.questions.length) {
+    if (currentQuestion >= activeQuizQuestions.length) {
         document.getElementById('quiz-question-container').style.display = 'none';
         document.getElementById('quiz-result').style.display = 'block';
-        document.getElementById('quiz-score').innerText = "Knowledge Key Granted!";
+        document.getElementById('quiz-score').innerText = "Knowledge Key & 2 Modaks Granted!";
         gameState.keys++;
+        gameState.modaks += 2;
         updateHUD();
         document.getElementById('btn-quiz-continue').onclick = () => { uiQuiz.classList.remove('active'); uiHud.classList.add('active'); isPaused = false; };
         return;
     }
-    const q = QUIZ_DATA.questions[currentQuestion];
+    const q = activeQuizQuestions[currentQuestion];
     document.getElementById('quiz-q').innerText = q.q;
     for (let i = 0; i < 4; i++) {
         const btn = document.getElementById('opt-' + i);
         btn.innerText = q.options[i];
         btn.onclick = () => {
-            if (i === q.correct) { currentQuestion++; showQuestion(); } 
-            else { document.getElementById('quiz-score').innerText = "Incorrect!"; }
+            if (i === q.correct) { 
+                currentQuestion++; 
+                showQuestion(); 
+            } 
+            else { 
+                // Wrong answer! End quiz and deduct health
+                gameState.health--;
+                updateHUD();
+                
+                uiQuiz.classList.remove('active'); 
+                uiHud.classList.add('active'); 
+                isPaused = false;
+                
+                showToast("Incorrect! The Shrine demands a toll. Lost 1 Health.");
+                
+                if (gameState.health <= 0) {
+                    showGameOver();
+                }
+            }
         };
     }
 }
