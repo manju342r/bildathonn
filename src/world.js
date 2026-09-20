@@ -507,17 +507,24 @@ function createWorld(scene) {
 
 
 // ==========================================
-    // EAST: FESTIVAL CITY (400, 0)
+    // EAST: WATERY PARCOUR BIOME (400, 0)
     // ==========================================
-    // Scattered buildings
-    for(let i=0; i<30; i++) {
-        let bx = 200 + Math.random() * 500;
-        let bz = (Math.random() - 0.5) * 500;
-        let safe = true;
-        for (let obj of interactables) {
-            if (Math.abs(bx - obj.x) < 40 && Math.abs(bz - obj.z) < 40) { safe = false; break; }
-        }
-        if (safe) addWall(scene, bx, bz, 30 + Math.random()*20, 30 + Math.random()*20, 0xaa6644, 20 + Math.random()*30);
+    
+    // Add Water Plane
+    const waterGeo = new THREE.PlaneGeometry(800, 600);
+    const waterMat = new THREE.MeshPhongMaterial({color: 0x1155cc, transparent: true, opacity: 0.85, shininess: 100});
+    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    waterMesh.rotation.x = -Math.PI / 2;
+    waterMesh.position.set(500, 1, 0); // Slightly above ground
+    scene.add(waterMesh);
+    
+    // Add some lotus/lilypads floating
+    for(let i=0; i<50; i++) {
+        let lx = 200 + Math.random() * 600;
+        let lz = (Math.random() - 0.5) * 500;
+        let pad = new THREE.Mesh(new THREE.CylinderGeometry(8 + Math.random()*5, 8, 1, 8), new THREE.MeshToonMaterial({color: 0x228833}));
+        pad.position.set(lx, 1.2, lz);
+        scene.add(pad);
     }
     
     // City Puzzle (Prosperity) - PARKOUR CHALLENGE
@@ -582,24 +589,30 @@ function createWorld(scene) {
     addWall(scene, -400, 100, 600, 20, 0x5c5346, 80);
     
     // Massive Explorable Summit behind the canyon
-    // A huge ramp leading up
     addPlatform(scene, -850, 15, 0, 100, 200);
     addPlatform(scene, -950, 35, 0, 100, 200);
-    addPlatform(scene, -1150, 55, 0, 300, 300); // The main summit area
+    addPlatform(scene, -1100, 55, 0, 200, 200); // Platform 1
+    
+    // GIANT MOUNTAIN behind it!
+    const mountainGeo = new THREE.ConeGeometry(300, 250, 8);
+    const mountainMat = new THREE.MeshToonMaterial({color: 0x4a3a30, roughness: 1.0});
+    const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+    mountain.position.set(-1500, 120, 0);
+    scene.add(mountain);
+    
+    addPlatform(scene, -1300, 80, 0, 100, 100); // Mountain Ledge
     
     // The Shrine at the summit
     let mountainShrine = createInteractable(scene, 'mountain_shrine', 'mountain_shrine', -1150, 0, 0x666666, 'box');
-    mountainShrine.mesh.position.y = 55; // Sit on the summit
+    mountainShrine.mesh.position.y = 55; 
 
+    // The Blessing is on the first summit
     let b4 = createInteractable(scene, 'blessing_courage', 'blessing', -1100, 0, 0x00ff00, 'octahedron', 65);
     b4.mesh.visible = false; b4.visible = false;
     
-    // Banasura Placeholder / The antagonist standing at the top causing the rock slide
-    addWall(scene, -1250, 0, 40, 40, 0x221111, 130);
-    
-    // The Sacred Diya - the final required object
-    let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1200, 0, 0xffd700, 'cylinder');
-    sacredDiya.mesh.position.y = 60; 
+    // The Sacred Diya (Ananta Jyoti) is up on the mountain ledge!
+    let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1300, 0, 0xffd700, 'cylinder');
+    sacredDiya.mesh.position.y = 85; 
     sacredDiya.mesh.scale.set(1.5, 1.5, 1.5);
     // Add a majestic golden light to it
     const sacredLight = new THREE.PointLight(0xffdd44, 2.5, 100);

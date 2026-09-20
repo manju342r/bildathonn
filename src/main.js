@@ -236,6 +236,16 @@ function loadModel(name, path) {
             wrapper.scale.set(scale, scale, scale);
             
             modelCache[name] = wrapper;
+            
+            // Place Banasura on the mountain!
+            if (name === 'banasura') {
+                const worldBanasura = wrapper.clone();
+                worldBanasura.position.set(-1350, 95, 0); // Stand on the ledge
+                worldBanasura.rotation.y = Math.PI / 2; // Face East (towards player)
+                worldBanasura.name = 'world_banasura';
+                scene.add(worldBanasura);
+            }
+            
             console.log(`Loaded and auto-scaled realistic model: ${name}`);
             resolve(true);
         }, undefined, (error) => {
@@ -292,11 +302,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
 // Lighting
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+const hemiLight = new THREE.HemisphereLight(0x8899aa, 0x223344, 0.4);
 hemiLight.position.set(0, 200, 0);
 scene.add(hemiLight);
 
-const dirLight = new THREE.DirectionalLight(0xffaa55, 0.8);
+const dirLight = new THREE.DirectionalLight(0xaaccff, 0.3);
 dirLight.position.set(100, 200, 50);
 dirLight.castShadow = true;
 dirLight.shadow.camera.top = 1000;
@@ -861,6 +871,16 @@ function handleObjInteraction(obj) {
             showToast("The Shrine is dormant. Light the 3 nearby Diyas.");
         }
     }
+    else if (obj.type === 'sacred_diya') {
+        gameState.sacredDiya = true;
+        obj.visible = false; obj.mesh.visible = false;
+        scene.remove(obj.mesh);
+        showToast("ANANTA JYOTI OBTAINED!");
+        if (gameState.blessings >= 4) {
+            gameState.stage = 'RETURN_CENTER';
+            setObjective("Return to Ganapati at the Central Shrine.");
+        }
+    }
     else if (obj.type === 'corruption') {
         obj.visible = false; obj.mesh.visible = false;
         scene.remove(obj.mesh);
@@ -899,9 +919,8 @@ function handleObjInteraction(obj) {
             setObjective("Navigate the Mountain canyon in the West.");
         }
         else if (obj.id === 'blessing_courage') {
-            showToast("BLESSING OF COURAGE OBTAINED\nALL FOUR BLESSINGS RECOVERED!");
-            gameState.stage = 'RETURN_CENTER';
-            setObjective("Return to Ganapati at the Central Shrine.");
+            showToast("BLESSING OF COURAGE OBTAINED\nBanasura guards the peak!");
+            setObjective("Climb the mountain and recover the Ananta Jyoti.");
         }
     }
 }
@@ -1194,6 +1213,11 @@ function animate() {
         else if (distToCenter < 150) groundY = 4;
         else if (distToCenter < 200) groundY = 2;
         
+        // East Water Biome Hole
+        if (player.position.x > 200 && player.position.x < 900 && player.position.z > -300 && player.position.z < 300) {
+            groundY = -20; // Fall into water
+        }
+        
         if (typeof platforms !== 'undefined') {
             for (let p of platforms) {
                 if (Math.abs(player.position.x - p.x) <= p.width/2 && Math.abs(player.position.z - p.z) <= p.depth/2) {
@@ -1363,6 +1387,25 @@ function animate() {
             }
         }
         
+        
+        // Drowning logic in East Water Biome
+        if (player.position.y <= -5 && player.position.x > 200) {
+            if (typeof window.lastDrownTime === 'undefined') window.lastDrownTime = 0;
+            if (Date.now() - window.lastDrownTime > 2000) {
+                window.lastDrownTime = Date.now();
+                gameState.health--;
+                updateHUD();
+                showToast("You drowned in the treacherous waters!");
+                
+                if (gameState.health <= 0) {
+                    showToast("YOU WERE OVERWHELMED! Restarting...");
+                    setTimeout(revivePlayer, 2000);
+                } else {
+                    player.position.set(200, 20, 0); // Respawn at edge
+                    window.playerVelocityY = 0;
+                }
+            }
+        }
         
         // Check static hazards (Cacti, Thorns, Pits)
         if (typeof hazards !== 'undefined') {
