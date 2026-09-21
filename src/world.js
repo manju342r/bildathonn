@@ -591,16 +591,19 @@ function createWorld(scene) {
     // Massive Explorable Summit behind the canyon
     addPlatform(scene, -850, 15, 0, 100, 200);
     addPlatform(scene, -950, 35, 0, 100, 200);
-    addPlatform(scene, -1100, 55, 0, 200, 200); // Platform 1
+    addPlatform(scene, -1075, 55, 0, 150, 200); // Platform 1 (Main Shrine Platform)
+    
+    // Stepping stones up to Banasura
+    addPlatform(scene, -1170, 65, 0, 40, 40);
+    addPlatform(scene, -1230, 75, 0, 40, 40);
+    addPlatform(scene, -1320, 85, 0, 150, 150); // Banasura's Mountain Ledge
     
     // GIANT MOUNTAIN behind it!
-    const mountainGeo = new THREE.ConeGeometry(300, 250, 8);
+    const mountainGeo = new THREE.ConeGeometry(400, 350, 8);
     const mountainMat = new THREE.MeshToonMaterial({color: 0x4a3a30, roughness: 1.0});
     const mountain = new THREE.Mesh(mountainGeo, mountainMat);
-    mountain.position.set(-1500, 120, 0);
+    mountain.position.set(-1700, 100, 0); // Pushed further back
     scene.add(mountain);
-    
-    addPlatform(scene, -1300, 80, 0, 100, 100); // Mountain Ledge
     
     // The Shrine at the summit
     let mountainShrine = createInteractable(scene, 'mountain_shrine', 'mountain_shrine', -1150, 0, 0x666666, 'box');
@@ -611,8 +614,8 @@ function createWorld(scene) {
     b4.mesh.visible = false; b4.visible = false;
     
     // The Sacred Diya (Ananta Jyoti) is up on the mountain ledge!
-    let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1300, 0, 0xffd700, 'cylinder');
-    sacredDiya.mesh.position.y = 85; 
+    let sacredDiya = createInteractable(scene, 'sacred_diya', 'sacred_diya', -1320, -30, 0xffd700, 'cylinder');
+    sacredDiya.mesh.position.y = 90; // Slightly above ledge 
     sacredDiya.mesh.scale.set(1.5, 1.5, 1.5);
     // Add a majestic golden light to it
     const sacredLight = new THREE.PointLight(0xffdd44, 2.5, 100);

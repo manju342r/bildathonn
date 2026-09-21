@@ -240,7 +240,7 @@ function loadModel(name, path) {
             // Place Banasura on the mountain!
             if (name === 'banasura') {
                 const worldBanasura = wrapper.clone();
-                worldBanasura.position.set(-1350, 95, 0); // Stand on the ledge
+                worldBanasura.position.set(-1350, 85, 0); // Stand on the ledge
                 worldBanasura.rotation.y = Math.PI / 2; // Face East (towards player)
                 worldBanasura.name = 'world_banasura';
                 scene.add(worldBanasura);
@@ -1088,7 +1088,7 @@ function animate() {
         }
         
                 // West Region (Courage) - Falling Rocks
-        if (player.position.x < -300 && player.position.x > -800 && Math.abs(player.position.z) < 100) {
+        if (player.position.x < -300 && player.position.x > -1300 && Math.abs(player.position.z) < 150) {
             inRunnerMode = true;
             camOffset.set(60, 40, 0); // Camera behind player looking West
             
@@ -1112,12 +1112,19 @@ function animate() {
                 b.mesh.position.z += b.speedZ * delta; // Roll sideways
                 b.mesh.position.y -= 50 * delta; // Fall down
                 
-                if (b.mesh.position.y < 8) {
-                    b.mesh.position.y = 8;
-                    // Boulders sometimes bounce off walls
-                    if (b.mesh.position.z > 40 || b.mesh.position.z < -40) {
-                        b.speedZ = -b.speedZ;
+                // Get ground Y for rock based on platforms
+                let rockGroundY = 8;
+                if (typeof platforms !== 'undefined') {
+                    for (let p of platforms) {
+                        if (Math.abs(b.mesh.position.x - p.x) <= p.width/2 && Math.abs(b.mesh.position.z - p.z) <= p.depth/2) {
+                            rockGroundY = Math.max(rockGroundY, p.y + 4);
+                        }
                     }
+                }
+                
+                if (b.mesh.position.y < rockGroundY) {
+                    b.mesh.position.y = rockGroundY;
+                    if (b.mesh.position.z > 40 || b.mesh.position.z < -40) b.speedZ = -b.speedZ;
                 }
                 b.mesh.rotation.z -= b.speedX * delta * 0.1;
                 
@@ -1137,7 +1144,10 @@ function animate() {
                     continue;
                 }
                 
-                if (b.mesh.position.x > -200) {
+                if (typeof b.age === 'undefined') b.age = 0;
+                b.age += delta;
+                
+                if (b.mesh.position.x > -200 || b.age > 10) {
                     scene.remove(b.mesh);
                     boulders.splice(i, 1);
                 }
