@@ -429,6 +429,7 @@ window.addEventListener('resize', () => {
 // UI Elements
 const uiMainMenu = document.getElementById('main-menu');
 const uiHow = document.getElementById('how-to-play');
+const uiStory = document.getElementById('story-screen');
 const uiCinematic = document.getElementById('cinematic-screen');
 const cinematicText = document.getElementById('cinematic-text');
 const uiHud = document.getElementById('hud');
@@ -601,6 +602,8 @@ function endCinematic() {
 document.getElementById('btn-play').onclick = startCinematic;
 document.getElementById('btn-how').onclick = () => { uiMainMenu.classList.remove('active'); uiHow.classList.add('active'); };
 document.getElementById('btn-close-how').onclick = () => { uiHow.classList.remove('active'); uiMainMenu.classList.add('active'); };
+document.getElementById('btn-story').onclick = () => { uiMainMenu.classList.remove('active'); uiStory.classList.add('active'); };
+document.getElementById('btn-close-story').onclick = () => { uiStory.classList.remove('active'); uiMainMenu.classList.add('active'); };
 document.getElementById('btn-restart').onclick = revivePlayer;
 document.getElementById('btn-play-again').onclick = () => location.reload();
 document.getElementById('btn-start-quiz').onclick = startQuiz;
